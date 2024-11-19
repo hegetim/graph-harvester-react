@@ -1,0 +1,45 @@
+{
+  "name": "@hegetim/graph-harvester-react",
+  "version": "0.1.0",
+  "description": "react component to access graph harvester",
+  "author": "Tim Hegemann <hegemann@informatik.uni-wuerzburg.de",
+  "contributors": [
+    "Julius Deynet <jdeynet@googlemail.com>",
+    "Sebastian Kempf <sebastian.kempf@uni-wuerzburg.de>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hegetim/graph-harvester-react.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "source": "src/index.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "require": "./dist/graph-harvester-react.cjs",
+    "default": "./dist/graph-harvester-react.modern.js"
+  },
+  "main": "./dist/graph-harvester-react.cjs",
+  "module": "./dist/graph-harvester-react.module.js",
+  "umd:main": "./dist/graph-harvester-react.umd.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "microbundle build --jsx React.createElement --external react --no-compress"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.202",
+    "@types/react": "^18.2.60",
+    "lodash": "^4.17.21",
+    "microbundle": "^0.15.1",
+    "react": "^18.2.0",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "lodash": "^4.17.21",
+    "react": "^18.2.0"
+  },
+  "files": [
+    "dist"
+  ]
+}

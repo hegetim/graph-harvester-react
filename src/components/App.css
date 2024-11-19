@@ -1,0 +1,15 @@
+/* SPDX-FileCopyrightText: 2024 Tim Hegemann <hegemann@informatik.uni-wuerzburg.de>
+ * SPDX-License-Identifier: MIT
+ */
+
+.gh__hidden {
+  display: none;
+}
+
+.gh__applet-main-container {
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2ex;
+}

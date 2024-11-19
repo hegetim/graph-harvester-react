@@ -1,0 +1,124 @@
+/* SPDX-FileCopyrightText: 2024 Julius Deynet <jdeynet@googlemail.com> 
+ * SPDX-FileCopyrightText: 2024 Tim Hegemann <hegemann@informatik.uni-wuerzburg.de>
+ * SPDX-FileCopyrightText: 2024 Sebastian Kempf <sebastian.kempf@uni-wuerzburg.de>
+ * SPDX-License-Identifier: MIT
+ */
+
+.gh__spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.gh__spinner-center {
+  width: 200px;
+  height: 200px;
+  margin: 50px auto;
+  animation: spin 4s linear infinite;
+}
+
+.gh__spinner-node {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  position: absolute;
+  background-color: var(--bs-primary);
+  transition: background-color 0.5s ease;
+}
+
+.gh__spinner-edge {
+  position: absolute;
+  height: 2px;
+  background-color: var(--bs-dark);
+  transition: background-color 0.5s ease;
+}
+
+.gh__spinner-ray {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: var(--bs-danger);
+  border-radius: 50%;
+  animation: traceEdges 6s linear infinite;
+}
+
+#gh__spinner-node1 {
+  top: 0;
+  left: 0;
+}
+
+#gh__spinner-node2 {
+  top: 0;
+  right: 0;
+}
+
+#gh__spinner-node3 {
+  bottom: 0;
+  left: 0;
+}
+
+#gh__spinner-node4 {
+  bottom: 0;
+  right: 0;
+}
+
+#gh__spinner-edge1 {
+  width: 180px;
+  top: 10px;
+  left: 10px;
+}
+
+#gh__spinner-edge2 {
+  width: 2px;
+  height: 180px;
+  top: 10px;
+  left: 10px;
+}
+
+#gh__spinner-edge3 {
+  width: 180px;
+  bottom: 10px;
+  left: 10px;
+}
+
+#gh__spinner-edge4 {
+  width: 2px;
+  height: 180px;
+  top: 10px;
+  right: 10px;
+}
+
+@keyframes traceEdges {
+
+  0%,
+  100% {
+    top: 5px;
+    left: 5px;
+  }
+
+  25% {
+    top: 5px;
+    left: 185px;
+  }
+
+  50% {
+    top: 185px;
+    left: 185px;
+  }
+
+  75% {
+    top: 185px;
+    left: 5px;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(-360deg);
+  }
+}

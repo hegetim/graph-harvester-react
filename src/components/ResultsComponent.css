@@ -1,0 +1,146 @@
+/* SPDX-FileCopyrightText: 2024 Julius Deynet <jdeynet@googlemail.com> 
+ * SPDX-FileCopyrightText: 2024 Tim Hegemann <hegemann@informatik.uni-wuerzburg.de>
+ * SPDX-FileCopyrightText: 2024 Sebastian Kempf <sebastian.kempf@uni-wuerzburg.de>
+ * SPDX-License-Identifier: MIT
+ */
+
+.gh__results-container {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto 1fr;
+  column-gap: 2ex;
+  row-gap: 4ex;
+}
+
+.gh__navigation-prev {
+  grid-column: 2 / span 1;
+}
+
+.gh__navigation-index-label {
+  grid-column: 3 / span 2;
+  align-self: center;
+  min-width: 40px;
+  text-align: center;
+}
+
+.gh__navigation-next {
+  grid-column: 5 / span 1;
+}
+
+.gh__navigation-new-upload {
+  grid-column: 6 / span 1;
+  justify-self: end;
+}
+
+.gh__results-left-container {
+  grid-column: 1 / span 3;
+}
+
+.gh__results-right-container {
+  grid-column: 4 / span 3;
+}
+
+.gh__results-left-container,
+.gh__results-right-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  background-color: var(--bs-light);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 5px;
+  padding: 15px;
+  text-align: center;
+}
+
+.gh__results-caption-big {
+  grid-column: 1 / span 6;
+  font-weight: bold;
+}
+
+.gh__results-table-container {
+  grid-column: 1 / span 6;
+  justify-self: center;
+  padding: 10px;
+  background-color: var(--bs-light);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 5px;
+}
+
+.gh__results-caption-small {
+  font-style: italic;
+  color: var(--bs-secondary-color);
+  margin-top: 1ex;
+}
+
+.gh__button {
+  min-width: 80px;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+
+.gh__repr-line {
+  stroke-width: 2;
+  stroke: #ff7f0e;
+}
+
+.gh__repr-bezier {
+  fill: none;
+  stroke-width: 2;
+  stroke: #2ca02c;
+}
+
+.gh__repr-circle {
+  fill: #1f77b4;
+}
+
+.gh__repr-rect {
+  fill: #d62728;
+}
+
+.gh__results-table {
+  border-collapse: collapse;
+}
+
+.gh__results-table th {
+  background-color: var(--bs-primary);
+  color: var(--bs-light);
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.gh__results-table thead {
+  border-left: 1px solid var(--bs-border-color);
+  border-right: 1px solid var(--bs-border-color);
+  text-align: center;
+}
+
+.gh__results-table td {
+  padding: 8px;
+  background-color: var(--bs-light);
+  border: 1px solid var(--bs-border-color);
+}
+
+.gh__results-table-g6cell {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: end;
+  gap: 0.5ex;
+}
+
+.gh__results-table-g6str {
+  font-family: monospace;
+  display: -webkit-inline-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.gh__results-table-cpy-btn {
+  cursor: pointer;
+}
+
+.gh__results-table-cpy-btn:active {
+  color: var(--bs-success);
+}

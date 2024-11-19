@@ -1,0 +1,38 @@
+/* SPDX-FileCopyrightText: 2024 Julius Deynet <jdeynet@googlemail.com> 
+ * SPDX-FileCopyrightText: 2024 Tim Hegemann <hegemann@informatik.uni-wuerzburg.de>
+ * SPDX-FileCopyrightText: 2024 Sebastian Kempf <sebastian.kempf@uni-wuerzburg.de>
+ * SPDX-License-Identifier: MIT
+ */
+
+.gh__file-select-container {
+  max-width: 300px;
+  height: 200px;
+  padding: 25px;
+  border: 2px dashed var(--bs-light-border-subtle);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  text-align: center;
+  cursor: pointer;
+  margin: 0 auto;
+}
+
+.gh__file-select-container:hover,
+.gh__file-select-active {
+  border-color: var(--bs-success);
+}
+
+.gh__file-select-error {
+  padding: 5px;
+  border-radius: 5px;
+  background-color: var(--bs-danger-bg-subtle);
+}
+
+.gh__url-select-container {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2ex;
+}
