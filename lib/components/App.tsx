@@ -16,10 +16,13 @@ type State = { type: 'new-upload' }
   | { type: 'error', msg: string }
   | { type: 'results', data: DetectedGraph[] };
 
-type Props = { baseUrl?: string, hogUrl?: string, showUrlInput?: boolean };
+type Props = { backend?: Backend, hogUrl?: string, showUrlInput?: boolean };
+
+type Backend = { type: 'local', callback: (file: File) => Promise<DetectedGraph[]> }
+  | { type: 'remote', url: string };
 
 export const GraphHarvesterApplet = ({
-  baseUrl = "https://projekte-ls6.informatik.uni-wuerzburg.de/graph_harvester",
+  backend = { type: 'remote', url: "https://projekte-ls6.informatik.uni-wuerzburg.de/graph_harvester" },
   hogUrl = "https://houseofgraphs.org/graphs",
   showUrlInput,
 }: Props) => {
@@ -27,15 +30,18 @@ export const GraphHarvesterApplet = ({
 
   const handleNewFile = async (file: File) => {
     setState({ type: 'processing', filename: file.name });
-    return sendPdf(baseUrl, file).then(raw => {
-      if (_.isArray(raw)) {
-        setState({ type: 'results', data: raw });
-        return undefined;
-      } else {
-        console.log(raw);
-        return Promise.reject("unexpected backend response");
-      }
-    }).catch(err => setState({ type: 'error', msg: String(err) }));
+    return (backend.type === 'local' ?
+      backend.callback(file).then(data => setState({ type: 'results', data })) :
+      sendPdf(backend.url, file).then(raw => {
+        if (_.isArray(raw)) {
+          setState({ type: 'results', data: raw });
+          return undefined;
+        } else {
+          console.log(raw);
+          return Promise.reject("unexpected backend response");
+        }
+      })
+    ).catch(err => setState({ type: 'error', msg: String(err) }));
   }
 
   return <div className="gh__applet-main-container">

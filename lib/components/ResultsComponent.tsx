@@ -13,7 +13,6 @@ import _ from "lodash";
 export const ResultsComponent = (props: { graphs: DetectedGraph[], reset: () => void, hogUrl: string }) => {
   const [index, setIndex] = useState(0);
   const max = props.graphs.length;
-  const graph = props.graphs[index]!;
 
   useEffect(() => {
     const handleKey = (ev: KeyboardEvent) => {
@@ -27,27 +26,33 @@ export const ResultsComponent = (props: { graphs: DetectedGraph[], reset: () => 
   return <div className="gh__results-container">
     <button className="gh__button gh__navigation-prev btn btn-primary" disabled={index === 0}
       onClick={() => setIndex(i => Math.max(0, i - 1))}>Previous</button>
-    <div className="gh__navigation-index-label">{`${index + 1}/${max}`}</div>
-    <button className="gh__button gh__navigation-next btn btn-primary" disabled={index === max - 1}
+    <div className="gh__navigation-index-label">{`${Math.min(max, index + 1)}/${max}`}</div>
+    <button className="gh__button gh__navigation-next btn btn-primary" disabled={index >= max - 1}
       onClick={() => setIndex(i => Math.min(max - 1, i + 1))}>Next</button>
     <button className="gh__navigation-new-upload gh__button btn btn-primary" onClick={props.reset}>New Upload</button>
-    <div className="gh__results-left-container">
-      <DetectedGraphComponent graph={graph} index={index} />
-      <div className="gh__results-caption-small">Graph produced by Graph Harvester</div>
-    </div>
-    <div className="gh__results-right-container">
-      <img className="gh__original-img" src={`data:image/png;base64,${graph.img}`} />
-      <div className="gh__results-caption-small">Original from pdf</div>
-    </div>
-    <div className="gh__results-caption-big">{graph.caption}</div>
-    <div className="gh__results-table-container">
-      <table className="gh__results-table">
-        <thead><tr><th>Graph6 String</th><th>House of Graphs Link</th></tr></thead>
-        <tbody>{makeTableRows(props.graphs[index]!, props.hogUrl)}</tbody>
-      </table>
-    </div>
+    {props.graphs.length > 0 ? makeContent(props.graphs[index], index, props.hogUrl) : makeNoResultsContent}
   </div>;
 }
+
+const makeContent = (graph: DetectedGraph, index: number, hogUrl: string) => <React.Fragment>
+  <div className="gh__results-left-container">
+    <DetectedGraphComponent graph={graph} index={index} />
+    <div className="gh__results-caption-small">Graph produced by Graph Harvester</div>
+  </div>
+  <div className="gh__results-right-container">
+    <img className="gh__original-img" src={`data:image/png;base64,${graph.img}`} />
+    <div className="gh__results-caption-small">Original from pdf</div>
+  </div>
+  <div className="gh__results-caption-big">{graph.caption}</div>
+  <div className="gh__results-table-container">
+    <table className="gh__results-table">
+      <thead><tr><th>Graph6 String</th><th>House of Graphs Link</th></tr></thead>
+      <tbody>{makeTableRows(graph, hogUrl)}</tbody>
+    </table>
+  </div>
+</React.Fragment>;
+
+const makeNoResultsContent = <div className="gh__results-caption-big">Document has no detectable graph drawings.</div>;
 
 const makeTableRows = (g: DetectedGraph, hogUrl: string) => {
   if (g.graph6_strings.length === 0) {
