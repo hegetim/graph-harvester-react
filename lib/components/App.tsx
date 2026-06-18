@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-import React, { useState } from "react";
-import { DetectedGraph } from "../model/Graph.js";
-import { sendPdf } from "../model/Upload.js";
-import { SelectFile } from "./SelectFile.js";
-import { ResultsComponent } from "./ResultsComponent.js";
-import { Spinner } from "./Spinner.js";
+import { useState } from "react";
+import type { DetectedGraph } from "../model/Graph";
+import { sendPdf } from "../model/Upload";
+import { SelectFile } from "./SelectFile";
+import { ResultsComponent } from "./ResultsComponent";
+import { Spinner } from "./Spinner";
 import _ from "lodash";
 import "./App.css";
 

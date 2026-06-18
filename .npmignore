@@ -6,4 +6,4 @@
 .editorconfig
 .gitignore
 
-src
+lib

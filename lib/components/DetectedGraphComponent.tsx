@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import React from "react";
-import { Bezier, Circle, DetectedGraph, Line, Rectangle } from "../model/Graph.js";
+import type { Bezier, Circle, DetectedGraph, Line, Rectangle } from "../model/Graph";
 
 export const DetectedGraphComponent = (props: { graph: DetectedGraph, index: number }) => {
   try {

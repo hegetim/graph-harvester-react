@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-import React from "react";
 import "./Spinner.css";
 
 export const Spinner = (props: { message: string }) => <div className="gh__spinner-container">

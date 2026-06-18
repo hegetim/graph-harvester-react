@@ -5,8 +5,8 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Circle, DetectedGraph, Rectangle } from "../model/Graph.js";
-import { DetectedGraphComponent } from "./DetectedGraphComponent.js";
+import type { Circle, DetectedGraph, Rectangle } from "../model/Graph";
+import { DetectedGraphComponent } from "./DetectedGraphComponent";
 import "./ResultsComponent.css";
 import _ from "lodash";
 

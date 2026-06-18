@@ -5,9 +5,9 @@
  */
 
 import React, { useCallback, useRef, useState } from "react";
-import { cls } from "../model/Util.js";
+import { cls } from "../model/Util";
 import "./SelectFile.css";
-import { Spinner } from "./Spinner.js";
+import { Spinner } from "./Spinner";
 
 const fileSizeLimit = 25 * 1024 * 1024;
 

@@ -1,45 +1,47 @@
 {
-  "name": "@hegetim/graph-harvester-react",
-  "version": "0.1.0",
-  "description": "react component to access graph harvester",
-  "author": "Tim Hegemann <hegemann@informatik.uni-wuerzburg.de",
-  "contributors": [
-    "Julius Deynet <jdeynet@googlemail.com>",
-    "Sebastian Kempf <sebastian.kempf@uni-wuerzburg.de>"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hegetim/graph-harvester-react.git"
-  },
-  "license": "MIT",
+  "name": "graph-harvester-react",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
-  "source": "src/index.ts",
+  "main": "./dist/graph-harvester-react.umd.cjs",
+  "module": "./dist/graph-harvester-react.js",
+  "types": "./dist/graph-harvester-react.d.ts",
   "exports": {
-    "types": "./dist/index.d.ts",
-    "require": "./dist/graph-harvester-react.cjs",
-    "default": "./dist/graph-harvester-react.modern.js"
-  },
-  "main": "./dist/graph-harvester-react.cjs",
-  "module": "./dist/graph-harvester-react.module.js",
-  "umd:main": "./dist/graph-harvester-react.umd.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "microbundle build --jsx React.createElement --external react --no-compress"
-  },
-  "devDependencies": {
-    "@types/lodash": "^4.14.202",
-    "@types/react": "^18.2.60",
-    "lodash": "^4.17.21",
-    "microbundle": "^0.15.1",
-    "react": "^18.2.0",
-    "typescript": "^5.3.3"
-  },
-  "peerDependencies": {
-    "lodash": "^4.17.21",
-    "react": "^18.2.0"
+    ".": {
+      "import": "./dist/graph-harvester-react.js",
+      "require": "./dist/graph-harvester-react.umd.cjs"
+    }
   },
   "files": [
     "dist"
-  ]
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "lodash": "^4.18.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@microsoft/api-extractor": "^7.58.9",
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^8.0.12",
+    "vite-plugin-dts": "^5.0.2",
+    "vite-plugin-lib-inject-css": "^2.2.2"
+  }
 }
