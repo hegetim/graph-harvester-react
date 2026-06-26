@@ -8,7 +8,6 @@ import { sendPdf } from "../model/Upload";
 import { SelectFile } from "./SelectFile";
 import { ResultsComponent } from "./ResultsComponent";
 import { Spinner } from "./Spinner";
-import _ from "lodash";
 import "./App.css";
 
 type State = { type: 'new-upload' }
@@ -33,7 +32,7 @@ export const GraphHarvesterApplet = ({
     return (backend.type === 'local' ?
       backend.callback(file).then(data => setState({ type: 'results', data })) :
       sendPdf(backend.url, file).then(raw => {
-        if (_.isArray(raw)) {
+        if (Array.isArray(raw)) {
           setState({ type: 'results', data: raw });
           return undefined;
         } else {

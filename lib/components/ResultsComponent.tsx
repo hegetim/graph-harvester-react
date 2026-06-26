@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import type { Circle, DetectedGraph, Rectangle } from "../model/Graph";
 import { DetectedGraphComponent } from "./DetectedGraphComponent";
 import "./ResultsComponent.css";
-import _ from "lodash";
+import { zip } from "../model/Util";
 
 export const ResultsComponent = (props: { graphs: DetectedGraph[], reset: () => void, hogUrl: string }) => {
   const [index, setIndex] = useState(0);
@@ -58,7 +58,7 @@ const makeTableRows = (g: DetectedGraph, hogUrl: string) => {
   if (g.graph6_strings.length === 0) {
     return <tr><td colSpan={2}>No interesting graphs found.</td></tr>;
   } else {
-    return _.zip(g.graph6_strings, g.hog_ids, g.circles, g.rects).filter(x => x[0]).map(([g6, hog, circs, rects], i) =>
+    return zip(g.graph6_strings, g.hog_ids, g.circles, g.rects).filter(x => x[0]).map(([g6, hog, circs, rects], i) =>
       <tr key={`${i}${g6}`}>
         <td>
           <div className="gh__results-table-g6cell">
