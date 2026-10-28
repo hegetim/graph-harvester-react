@@ -15,16 +15,16 @@ type State = { type: 'new-upload' }
   | { type: 'error', msg: string }
   | { type: 'results', data: DetectedGraph[] };
 
-type Props = { backend?: Backend, hogUrl?: string, showUrlInput?: boolean };
+export type GraphHarvesterProps = { backend?: Backend, hogUrl?: string, showUrlInput?: boolean };
 
-type Backend = { type: 'local', callback: (file: File) => Promise<DetectedGraph[]> }
+export type Backend = { type: 'local', callback: (file: File) => Promise<DetectedGraph[]> }
   | { type: 'remote', url: string };
 
 export const GraphHarvesterApplet = ({
   backend = { type: 'remote', url: "https://projekte-ls6.informatik.uni-wuerzburg.de/graph_harvester" },
   hogUrl = "https://houseofgraphs.org/graphs",
   showUrlInput,
-}: Props) => {
+}: GraphHarvesterProps) => {
   const [state, setState] = useState<State>({ type: 'new-upload' });
 
   const handleNewFile = async (file: File) => {

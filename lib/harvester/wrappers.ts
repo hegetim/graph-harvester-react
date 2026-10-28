@@ -5,6 +5,8 @@
 
 import * as mupdf from 'mupdf'
 import * as utils from './geometry_utils.js'
+import type { Bezier, Circle, DetectedGraph, Line, Point, Rectangle } from '../model/Graph.js'
+export type { Bezier, Circle, DetectedGraph, Line, Point, Rectangle } from '../model/Graph.js'
 
 
 export const default_stroke = new mupdf.StrokeState({
@@ -322,8 +324,7 @@ export class Graph {
 
 
   /** A detected graph is the interface used to communicate with the frontend. It contains a list of graphs (including HoG ID) and a list of objects the graphs consist of. */
-  static toDetectedGraph(graphs: Graph[], drawing: Drawing, hog: boolean) {
-    const n = graphs.length
+  static toDetectedGraph(graphs: Graph[], drawing: Drawing, hog: boolean): DetectedGraph {
     const img: string = utils.pngBytesToBase64(drawing.toPNG(2))
     const boundingBox: readonly [number, number, number, number] = drawing.getBounds()
     const caption: string = "" // no caption extraction implemented
@@ -364,7 +365,7 @@ export class Graph {
         }
       }
     }
-    return { graph6_strings, img, boundingBox, caption, circles, rects, lines, beziers, hog_ids, connected_components: graphs } as DetectedGraph
+    return { graph6_strings, img, boundingBox, caption, circles, rects, lines, beziers, hog_ids }
   }
 }
 
@@ -766,50 +767,5 @@ export class Drawing {
 }
 
 
-export interface Point {
-  x: number
-  y: number
-}
 
-/** The following interfaces serve to communicate with the frontend */
-export interface DetectedGraph {
-  graph6_strings: string[]
-  circles: Circle[][]
-  rects: Rectangle[][]
-  lines: Line[]
-  beziers: Bezier[]
-  boundingBox: readonly [number, number, number, number]
-  caption: string // (currently using empty string)
-  img: string
-  hog_ids: number[] // TODO: make a function that asks HOG
-  connected_components: Graph[]
-}
-
-
-export interface Circle {
-  radius: number
-  center: Point
-  index: number
-}
-
-
-export interface Rectangle {
-  topLeft: Point
-  bottomRight: Point
-  index: number
-}
-
-
-export interface Line {
-  start: Point
-  stop: Point
-}
-
-
-export interface Bezier {
-  start: Point
-  p1: Point
-  p2: Point
-  stop: Point
-}
 

@@ -31,5 +31,9 @@
   },
   "include": [
     "lib"
+  ],
+  "exclude": [
+    "lib/harvester/node-debug.ts",
+    "lib/harvester/debug_exports.ts"
   ]
 }

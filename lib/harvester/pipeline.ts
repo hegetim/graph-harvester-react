@@ -3,59 +3,43 @@
  */
 
 import * as mupdf from 'mupdf'
-import * as fs from "node:fs"
-import { detect_graphs_from_drawing } from "./graph_detection.js"
-import * as pdf_extraction from "./pdf_extraction.js"
+import { detect_graphs_from_drawing } from './graph_detection.js'
+import * as pdf_extraction from './pdf_extraction.js'
 import { Graph, type DetectedGraph } from './wrappers.js'
 
-/** Used for debugging purposes to target one specific file without using the frontend */
-export function execute() {
-  var logs: string[] = ["Logs of the most recent iteration\n"]
-  let doc = mupdf.PDFDocument.openDocument(fs.readFileSync("test_files/test.pdf"))
-  var graphs: Graph[] = []
-  for (var i = 0; i < doc.countPages(); i++) {
-    var page = doc.loadPage(i)
-    let paths = pdf_extraction.get_paths_from_page(page)
-    let drawings = pdf_extraction.group_paths_by_bb(paths).sort((a, b) => a.minX - b.minX)
-    //console.log("number of drawings: "+drawings.length)
-    for (var j = 0; j < drawings.length; j++) {
-      var drawing = drawings[j]
-      if (drawing !== undefined) {
-        pdf_extraction.export_drawing(drawing, "test_files/test_d" + (j + 1))
-        let new_graphs = detect_graphs_from_drawing(drawing, logs)
-        for (var k = 0; k < new_graphs.length; k++) {
-          new_graphs[k]!.metadata.push("Page " + (i + 1) + ", Drawing " + (j + 1) + ", Nr " + k)
-          pdf_extraction.exportGraph(new_graphs[k]!, "test_files/Drawing " + (j + 1) + ", Nr " + k)
-        }
-        graphs.push(...new_graphs)
-      }
-    }
-  }
-  fs.writeFileSync("test_files/log.txt", logs.join(""))
-  return graphs
-}
+/**
+ * Run graph extraction on PDF bytes supplied by the caller.
+ *
+ * Filesystem and debugging concerns deliberately do not belong in this
+ * browser-facing module; see node-debug.ts for the old command-line harness.
+ */
+export function execute_file(
+  file: ArrayBuffer | Uint8Array<ArrayBufferLike>,
+  params: { hog: boolean; logs?: string[] },
+): DetectedGraph[] {
+  const doc = mupdf.PDFDocument.openDocument(file)
+  const detectedGraphs: DetectedGraph[] = []
 
-/** This is the gateway to the pipeline */
-export function execute_file(file: string | ArrayBuffer | mupdf.Buffer | Uint8Array<ArrayBufferLike> | mupdf.Stream, params: { hog: boolean, logs?: string[], to_png?: string }) {
-  let doc = mupdf.PDFDocument.openDocument(file)
-  let detected_graphs: DetectedGraph[] = []
-  for (var i = 0; i < doc.countPages(); i++) {
-    var page = doc.loadPage(i)
-    let paths = pdf_extraction.get_paths_from_page(page)
-    let drawings = pdf_extraction.group_paths_by_bb(paths).sort((a, b) => a.minX - b.minX)
-    for (var j = 0; j < drawings.length; j++) {
-      var drawing = drawings[j]
-      if (drawing !== undefined) {
-        let new_graphs = detect_graphs_from_drawing(drawing, params?.logs)
-        if (params?.to_png) {
-          pdf_extraction.export_drawing(drawing, params?.to_png + "p" + (i + 1) + "d" + (j + 1))
-        }
-        for (var k = 0; k < new_graphs.length; k++) {
-          new_graphs[k]!.metadata.push("Page " + (i + 1) + ", Drawing " + (j + 1) + ", Nr " + k)
-        }
-        detected_graphs.push(Graph.toDetectedGraph(new_graphs, drawing, params.hog))
-      }
+  for (let pageIndex = 0; pageIndex < doc.countPages(); pageIndex++) {
+    const page = doc.loadPage(pageIndex)
+    const paths = pdf_extraction.get_paths_from_page(page)
+    const drawings = pdf_extraction
+      .group_paths_by_bb(paths)
+      .sort((a, b) => a.minX - b.minX)
+
+    for (let drawingIndex = 0; drawingIndex < drawings.length; drawingIndex++) {
+      const drawing = drawings[drawingIndex]
+      if (drawing === undefined) continue
+
+      const graphs = detect_graphs_from_drawing(drawing, params.logs)
+      graphs.forEach((graph, graphIndex) => {
+        graph.metadata.push(
+          `Page ${pageIndex + 1}, Drawing ${drawingIndex + 1}, Nr ${graphIndex}`,
+        )
+      })
+      detectedGraphs.push(Graph.toDetectedGraph(graphs, drawing, params.hog))
     }
   }
-  return detected_graphs
+
+  return detectedGraphs
 }

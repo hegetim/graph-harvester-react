@@ -3,9 +3,8 @@
  */
 
 import * as mupdf from 'mupdf'
-import * as fs from "node:fs"
 import * as geometry_utils from "./geometry_utils.js"
-import { Drawing, Path_Metadata, Graph } from './wrappers.js'
+import { Drawing, Path_Metadata } from './wrappers.js'
 
 
 const DRAWING_AREA_THRESHOLD = 500 //minimum area a drawing needs to have to be considered
@@ -16,19 +15,19 @@ export function get_paths_from_page(page: mupdf.Page): Path_Metadata[] {
   var list = page.toDisplayList()
   var paths: Path_Metadata[] = []
   var traceDevice = new mupdf.Device({ // Object used to extract Path elements
-    strokeText(text: any) { },
-    fillImage(image: any) { },
+    strokeText(_text: any) { },
+    fillImage(_image: any) { },
     fillPath(path: mupdf.Path, evenOdd: boolean, ctm: mupdf.Matrix, colorSpace: mupdf.ColorSpace, color: mupdf.Color, alpha: number) {
       var data = new Path_Metadata(path, path.getBounds(null as any, ctm), ctm, "fill", colorSpace, color, alpha, undefined, evenOdd)
       paths.push(data)
     },
-    clipPath(path: mupdf.Path, evenOdd: boolean, ctm: mupdf.Matrix) {
+    clipPath(_path: mupdf.Path, _evenOdd: boolean, _ctm: mupdf.Matrix) {
     },
     strokePath(path: mupdf.Path, stroke: mupdf.StrokeState, ctm: mupdf.Matrix, colorSpace: mupdf.ColorSpace, color: mupdf.Color, alpha: number) {
       var data = new Path_Metadata(path, path.getBounds(stroke, ctm), ctm, "stroke", colorSpace, color, alpha, stroke, undefined)
       paths.push(data)
     },
-    clipStrokePath(path: mupdf.Path, stroke: mupdf.StrokeState, ctm: mupdf.Matrix) {
+    clipStrokePath(_path: mupdf.Path, _stroke: mupdf.StrokeState, _ctm: mupdf.Matrix) {
     }
   })
   list.run(traceDevice, mupdf.Matrix.identity)
@@ -57,30 +56,3 @@ export function group_paths_by_bb(paths: Path_Metadata[]): Drawing[] {
 }
 
 
-/** Exports a drawing to PNG, scaled by a factor of 5 for higher resolution - only used for benchmarks and debugging purposes.
-@input name includes the directory (starting in the root of the project) and ends with the desired name of the file. ".PNG" is not required. */
-export function export_drawing(drawing: Drawing, name: string) {
-  fs.writeFileSync(name + ".png", drawing.toPNG())
-}
-
-
-/** Exports a graph as .gv - only used for benchmarks and debugging purposes.
-@name: includes the directory starting from the root folder of the project up until the desired name of the file, but does not need ".gv" specified.*/
-export function exportGraph(graph: Graph, name: string) {
-  fs.writeFileSync(name + ".gv", graph.toString())
-}
-
-
-/** Exports a graph object as an adjacency list in .txt format - only used for benchmarks and debugging purposes.
-@name: includes the directory starting from the root folder of the project up until the desired name of the file, but does not need ".txt" specified.*/
-export function exportGraphAsAdjacency(graph: Graph, name: string) {
-  let adjacency = graph.toAdjacencyMatrix()
-  let asString: string = ""
-  for (const row of adjacency) {
-    for (const entry of row) {
-      asString += (entry + " ")
-    }
-    asString += "\n"
-  }
-  fs.writeFileSync(name + ".txt", asString)
-}

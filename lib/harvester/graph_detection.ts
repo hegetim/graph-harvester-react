@@ -173,7 +173,7 @@ function filter_vertices_by_area(vertex_candidates: Path_Metadata[], edge_candid
 
 /** Given a map that links each vertex to a list of incident edges, where each edge has a pointer to whatever its start or endpoint is icndient to, performs DFS to find each connected component and turn it into a graph.
  * Rejects graphs with less than 5 vertices and less than 4 edges - these thresholds can be changed in wrappers.ts/Graph */
-function build_graphs_from_map(map: Map<Path_Metadata, Stroke[]>, logs?: string[]): Graph[] {
+function build_graphs_from_map(map: Map<Path_Metadata, Stroke[]>, _logs?: string[]): Graph[] {
   const visited: Set<Path_Metadata | Stroke> = new Set<Path_Metadata | Stroke>()
   const graphs: Graph[] = []
   for (const vertex of map.keys()) { // for every vertex, do DFS

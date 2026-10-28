@@ -307,7 +307,7 @@ function euclidean_distance(p1: Point, p2: Point) {
  * @param distance_threshold: similar to vertices_within_distance_of_edge(), this acts as a search radius around each vertex
  * @param maximum_extension: this describes the maximum number of pixels an edge is allowed to be extended by
  */
-export function extend_orphaned_edges(graph: Map<Path_Metadata, Stroke[]>, distance_threshold: number, maximum_extension: number, step: number, edges: Stroke[], vertices: Path_Metadata[], logs?: string[]) {
+export function extend_orphaned_edges(graph: Map<Path_Metadata, Stroke[]>, distance_threshold: number, maximum_extension: number, step: number, edges: Stroke[], vertices: Path_Metadata[], _logs?: string[]) {
   const points: Point[] = []
   const index_to_edge: { edge: Stroke, start: boolean }[] = []
   const linked_edges: Map<string, { edge: Stroke, start: boolean, index: number, vertex: Path_Metadata }> = new Map() // stores the index of a point that led to an endpoint getting linked and the vertex it got linked to. If two vertices could be linked, the one with the lower index is closer, so we take that one
@@ -825,11 +825,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
     }
     handle_ambiguous_edge(edge, start, indices)
   }
-  if (logs) {
-    for (const edge of edges) {
-      //logs?.push("Edge [("+ edge.start.x + ", "+edge.start.y + "),( "+ edge.end.x + ", "+ edge.end.y + ")] AFTER [Start, End]: "+ (edge.start_incident? "true" : "false") + (edge.end_incident? " true" : " false") +"\n")
-    }
-  }
+
 }
 
 
