@@ -1,0 +1,268 @@
+/* SPDX-FileCopyrightText: 2026 Jonas Spies <jonas.spies@stud-mail.uni-wuerzburg.de>
+ * SPDX-License-Identifier: MIT
+ */
+
+import { Drawing, Path_Metadata, Stroke, Graph, type Point } from "./wrappers.js"
+import * as utils from "./geometry_utils.js"
+
+// Only keep vertices with a ratio between that and its inverse 
+const VERTEX_HEIGHT_WIDTH_RATIO_THRESHOLD = 0.75
+// Only consider edges connected to a vertex, if the edge overlaps the vertices bounding box, scaled by this
+const VERTEX_EDGE_DISTANCE_THRESHOLD = 1.07 // best results between 106% and 109% 
+// Try extending orphans by this many pixels and see if there are any incident vertices now
+const EDGE_EXTENSION_THRESHOLD = 9
+// The step size by which we extend orphaned edges
+const EDGE_EXTENSION_STEP_SIZE = 3
+// Filter vertices that take up at least that percentage of the drawing's bounding box
+const DRAWING_AREA_THRESHOLD = 0.05
+// Determines by what percentage vertices of the same cluster may be apart in size
+const GROUP_VERTEX_THRESHOLD = 0.3
+const MIN_CLUSTER_SIZE = 3 // super important parameter apparently
+// Determines if a vertex is considered visible (if not, it will be rejected)
+const LUMINANCE_THRESHOLD = 0.95 // 0.87 seems to be a threshold for 20_56 and 15_243 especially
+const ALPHA_THRESHOLD = 0.1
+
+// Indicators to activate / deactivate filters by certain parameters
+const HEIGHT_WIDTH = true //(Idea: only activate this filter if some vertices remain after)
+
+/** Uses various checks to turn all vertex candidates that fail one of them into edge candidates
+ * @CHECK Vertices must be somewhat shaped like a square (height / width ratio)
+ * @CHECK Vertices must be somewhat small compared to the overall drawing
+ * @CHECK Vertices must be visible.*/
+function filter_vertices(vertex_candidates: Path_Metadata[], edge_candidates: Stroke[], params: { drawing_area: number }, logs?: string[]) {
+  const n = vertex_candidates.length
+  for (var i = 0; i < n; i++) {
+    let vertex = vertex_candidates.shift()
+    var is_good = true
+    var full_reject = false
+    if (!vertex)
+      throw new Error("illegal array length")
+    // Filter vertices that are not "square-like" enough
+    if (HEIGHT_WIDTH) {
+      const ratio = vertex.height_width_ratio()
+      if (!(ratio > VERTEX_HEIGHT_WIDTH_RATIO_THRESHOLD && ratio < (1 / VERTEX_HEIGHT_WIDTH_RATIO_THRESHOLD))) {
+        logs?.push("Filtering vertex:\n" + vertex + " Height / Width Ratio: " + ratio)
+        is_good = false
+      }
+
+    }
+    // Filter Large Vertices
+    if (params.drawing_area != 0 && vertex.area() >= params.drawing_area * DRAWING_AREA_THRESHOLD) {
+      logs?.push("Filtering vertex:\n" + vertex + " Area: " + vertex.area())
+      is_good = false
+    }
+    // Filter invisible vertices
+    if (vertex.alpha <= ALPHA_THRESHOLD || utils.is_brighter_than(vertex, LUMINANCE_THRESHOLD)) {
+      logs?.push("Filtering vertex:\n" + vertex + "\n Alpha: " + vertex.alpha + " Color: " + vertex.colorSpace.getType() + ", " + vertex.color)
+      is_good = false
+      full_reject = true //does not fully exclude such edges, since some objects never become a vertex candidate, but break_paths_into_stroke() does the same check for all objects => this line of code should never trigger.
+    }
+
+    // Code that actually does something with the flag
+    if (is_good)
+      vertex_candidates.push(vertex)
+    else if (!full_reject)
+      edge_candidates.push(...utils.break_path_into_strokes(vertex, LUMINANCE_THRESHOLD).strokes)
+  }
+}
+
+
+/** Groups the vertex candidates by size into different clusters, then performs different checks to filter. This function uses recursion until convergence, which happens usually after 2-3 executions.
+ * Adds the rejected vertex candidates to 'edge_candidates' and returns a new list of filtered vertex_candidates*/
+function filter_vertices_by_area(vertex_candidates: Path_Metadata[], edge_candidates: Stroke[], logs?: string[]) {
+  const clusters: Path_Metadata[][] = []
+  const accepted_vertices: Path_Metadata[] = []
+  const further_examination: Path_Metadata[] = []
+  if (vertex_candidates.length == 0)
+    return []
+  // CASE 1: enough vertex candidates
+  if (vertex_candidates.length >= MIN_CLUSTER_SIZE) {
+    logs?.push("Case 1: Found " + vertex_candidates.length + " intial vertices")
+    // Clustering
+    for (const vertex of vertex_candidates) {
+      logs?.push("Color:" + vertex.colorSpace.getType() + ", " + vertex.color + " Alpha: " + vertex.alpha + " " + vertex)
+      var cluster_found = false
+      for (const cluster of clusters) {
+        let avg_size: number = 0
+        cluster.forEach(x => avg_size += x.area())
+        avg_size /= cluster.length // now is the average size
+        if (Math.abs(avg_size - vertex.area()) <= avg_size * GROUP_VERTEX_THRESHOLD) {
+          cluster.push(vertex)
+          cluster_found = true
+          break
+        }
+      }
+      if (!cluster_found)
+        clusters.push([vertex])
+    }
+    if (logs) {
+      logs.push("Found " + clusters.length + " clusters")
+      for (const cluster of clusters) {
+        let res = "Next cluster: \n"
+        for (const v of cluster) {
+          res += v.area() + ", "
+        }
+        logs.push(res)
+      }
+    }
+
+    // First check: number of elements per cluster and avg size
+    for (const cluster of clusters) {
+      if (cluster.length < MIN_CLUSTER_SIZE && cluster.length > 0) { // few elements
+        logs?.push("Putting cluster into further examination")
+        further_examination.push(...cluster)
+        continue
+      }
+      else if (cluster.length >= MIN_CLUSTER_SIZE) { // Compute avg size for size check
+        var other_avg_size = 0
+        const others = vertex_candidates.filter(v => !cluster.some(x => x === v))
+        logs?.push("Others: " + others.length + " vertices")
+        others.forEach(x => {
+          other_avg_size += x.area()
+        })
+        other_avg_size = other_avg_size / others.length
+        logs?.push("Other avg Size: " + other_avg_size)
+        // Use avg size to filter vertices based on size
+        for (const v of cluster) {
+          if (v.area() / other_avg_size >= 1) { // v is larger than average
+            logs?.push("Found large vertex, sending to further examination...")
+            further_examination.push(v)
+          }
+          else {
+            accepted_vertices.push(v)
+          }
+
+        }
+      }
+      else { // All vertices about the same size
+        logs?.push("All vertices about the same size, accepting all")
+        accepted_vertices.push(...cluster)
+      }
+
+    }
+    const points: Point[] = []
+    accepted_vertices.forEach(x => points.push(x.center()))
+    for (const vertex of further_examination) {
+      if (utils.vertex_contains_point(vertex, points)) { //REMARK: vertex_contains_point() builds a search tree in every call. Maybe using a dynamic data structure is better
+        logs?.push("Rejected a vertex")
+        edge_candidates.push(...utils.break_path_into_strokes(vertex, LUMINANCE_THRESHOLD).strokes)
+      }
+      else {
+        accepted_vertices.push(vertex)
+        points.push(vertex.center())
+      }
+    }
+  }
+  // CASE 2: not a lot of vertex candidates to begin with
+  else {
+    accepted_vertices.push(vertex_candidates[0]!)
+    further_examination.push(...vertex_candidates) // just check that no vertices overlap
+    further_examination.shift() // get rid of the first element because we already accepted that one
+  }
+  let res = ""
+  for (const v of accepted_vertices) {
+    res += v.area() + ", "
+  }
+  logs?.push("Found " + accepted_vertices.length + " vertices:\n" + res)
+  if ((accepted_vertices.length < vertex_candidates.length) && (accepted_vertices.length >= MIN_CLUSTER_SIZE)) // Recursion on Case 1 until convergence
+    return filter_vertices_by_area(accepted_vertices, edge_candidates, logs)
+  else
+    return accepted_vertices
+}
+
+
+/** Given a map that links each vertex to a list of incident edges, where each edge has a pointer to whatever its start or endpoint is icndient to, performs DFS to find each connected component and turn it into a graph.
+ * Rejects graphs with less than 5 vertices and less than 4 edges - these thresholds can be changed in wrappers.ts/Graph */
+function build_graphs_from_map(map: Map<Path_Metadata, Stroke[]>, logs?: string[]): Graph[] {
+  const visited: Set<Path_Metadata | Stroke> = new Set<Path_Metadata | Stroke>()
+  const graphs: Graph[] = []
+  for (const vertex of map.keys()) { // for every vertex, do DFS
+    if (visited.has(vertex)) // already part of some graph, so skip
+      continue
+    const graph = new Graph()
+    const vertices: Path_Metadata[] = [vertex]
+    while (vertices.length > 0) { // actual DFS
+      let next = vertices.pop()!
+      if (!visited.has(next)) { //Adds element 0 (imagine an edge called 1 with two endpoints 0,2 in a chain 0 - 1 - 2)
+        visited.add(next)
+        graph.putVertex(next)
+      }
+      let edge = map.get(next)!.find((edge) => !visited.has(edge)) //An arbitrary edge that has not yet been visited
+      if (edge) {
+        var previous: Path_Metadata | Stroke | undefined = next // 0
+        var current: Path_Metadata | Stroke | undefined = edge // 1
+        let path: Stroke[] = []
+        do { // Traverse Stroke, until a dead end or a Vertex is found
+          if (!visited.has(current)) // Adds 1 in first iteration, 2 in all other
+            visited.add(current)
+          path.push(current)
+          previous = current.traverse(previous) // previous 0 => 2
+          var aux: Path_Metadata | Stroke | undefined = previous // aux => 2
+          previous = current // previous 2 => 1
+          current = aux // current 1 => 2
+        } while (current && (current instanceof Stroke))
+        if (current && current !== next) {
+          if (!visited.has(current))
+            visited.add(current)
+          graph.putVertex(current)
+          graph.putEdge({ v1_id: graph.getOrPutVertex(next), v2_id: graph.getOrPutVertex(current), path })
+          vertices.push(next)
+          vertices.push(current)
+        }
+        else { // Edge candidate wasnt an edge after all
+          vertices.push(next)
+        }
+      }
+      else { // Vertex has no unseen edges
+        continue
+      }
+    }
+    if (graph.hasEdges(Graph.MINIMUM_EDGES) && graph.hasVertices(Graph.MINIMUM_VERTICES))
+      graphs.push(graph)
+  }
+  return graphs
+}
+
+
+/**The access point to graph detection. Takes a drawing and tries to extract a list of graphs from it. */
+export function detect_graphs_from_drawing(drawing: Drawing, logs?: string[]): Graph[] {
+  logs?.push("Called Detect Graphs from Drawing...")
+  // Finding Candidates
+  let vertex_candidates: Path_Metadata[] = []
+  var edge_candidates: Stroke[] = []
+  //logs?.push("Initializing Graph Detection for new Drawing...\n")
+  for (var path of drawing.paths) {
+    let res = utils.break_path_into_strokes(path, LUMINANCE_THRESHOLD)
+    if (res.is_vertex_candidate) {
+      path.shape = res.shape
+      vertex_candidates.push(path)
+    }
+    else if (!res.full_reject)
+      edge_candidates.push(...res.strokes)
+  }
+  filter_vertices(vertex_candidates, edge_candidates, { drawing_area: drawing.area() })
+  vertex_candidates = filter_vertices_by_area(vertex_candidates, edge_candidates)
+  var implied_vertices = false
+  if (vertex_candidates.length == 0)
+    implied_vertices = true
+  if (edge_candidates.length == 0)
+    return []
+  vertex_candidates = utils.merge_overlapping_vertices(vertex_candidates)
+  let graph = utils.vertices_within_distance_of_edge(VERTEX_EDGE_DISTANCE_THRESHOLD, edge_candidates, vertex_candidates)
+  utils.edges_incident_to_edges(edge_candidates, graph, implied_vertices)
+  utils.extend_orphaned_edges(graph, VERTEX_EDGE_DISTANCE_THRESHOLD, EDGE_EXTENSION_THRESHOLD, EDGE_EXTENSION_STEP_SIZE, edge_candidates, vertex_candidates)
+  let { new_graph, new_edges } = utils.split_edges_with_middle_vertex(graph, edge_candidates)
+  graph = new_graph
+  edge_candidates = new_edges
+  const graphs = build_graphs_from_map(graph)
+  if (logs)
+    for (const graph of graphs) {
+      logs.push(graph.toString())
+      /*logs.push("G6: "+graph.toGraph6())
+      let adj = graph.toAdjacencyMatrix()
+      logs.push("Adjacency:")
+      for (const row of adj)
+          logs.push(row.toString())*/
+    }
+  return graphs
+}

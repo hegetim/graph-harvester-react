@@ -21,7 +21,7 @@ export default defineConfig({
     copyPublicDir: false,
     lib: {
       // this is the file that exports our components
-      entry: resolve(__dirname, "lib/graph-harvester-react.ts"),
+      entry: resolve(import.meta.dirname, "lib/graph-harvester-react.ts"),
       name: "GraphHarvester",
       fileName: "graph-harvester-react",
       formats: ["es"],
@@ -29,16 +29,19 @@ export default defineConfig({
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library
-      external: ["react-dom", "lodash"],
+      external: ["react-dom"],
       output: {
         // Provide global variables to use in the UMD build
         // for externalized deps
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
-          lodash: "Lodash",
         },
       },
     },
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
   },
 })
