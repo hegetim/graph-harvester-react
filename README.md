@@ -26,6 +26,28 @@ The applet can be customized via optional properties.
  * `baseUrl`: the url of the backend component
  * `hogUrl`: the House of Graphs url
  * `showUrlInput`: enables users to query URLs as an alternative to uploading pdf files
+ * `useHogProxy`: defaults to `true`; local extraction uses `/hog-api/enquiry`.
+   Set to `false` to contact `https://houseofgraphs.org/api/enquiry` directly,
+   e.g. when hosted on that same origin. This does not affect remote backends.
+
+For local extraction, pass `harvestFile` as the callback so it receives the
+component's lookup options (custom callbacks must forward the second argument):
+
+```jsx
+<GraphHarvesterApplet
+  backend={{ type: 'local', callback: harvestFile }}
+  useHogProxy={false}
+/>
+```
+
+Failed lookups preserve the extracted graph and report an error beside its
+HoG link and in the browser console rather than claiming the graph is absent. Browsers cannot reliably distinguish CORS failures
+from other network failures, so the error mentions both possibilities.
+
+The demo defaults to proxying; open `/?hogProxy=false` to test direct requests.
+Vite supplies the development/preview proxy only. Production webservers must
+configure `/hog-api/*` to forward to `https://houseofgraphs.org/api/*` if proxying
+is enabled; the static build does not include a proxy server.
 
 
 Publication

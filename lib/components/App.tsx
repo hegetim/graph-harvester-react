@@ -15,22 +15,31 @@ type State = { type: 'new-upload' }
   | { type: 'error', msg: string }
   | { type: 'results', data: DetectedGraph[] };
 
-export type GraphHarvesterProps = { backend?: Backend, hogUrl?: string, showUrlInput?: boolean };
+export type GraphHarvesterProps = {
+  backend?: Backend;
+  hogUrl?: string;
+  showUrlInput?: boolean;
+  /** Use /hog-api/enquiry instead of contacting HoG directly (local backend only). */
+  useHogProxy?: boolean;
+};
 
-export type Backend = { type: 'local', callback: (file: File) => Promise<DetectedGraph[]> }
+export type Backend = { type: 'local', callback: (file: File, options?: { hogEnquiryUrl?: string }) => Promise<DetectedGraph[]> }
   | { type: 'remote', url: string };
 
 export const GraphHarvesterApplet = ({
   backend = { type: 'remote', url: "https://projekte-ls6.informatik.uni-wuerzburg.de/graph_harvester" },
   hogUrl = "https://houseofgraphs.org/graphs",
   showUrlInput,
+  useHogProxy = true,
 }: GraphHarvesterProps) => {
   const [state, setState] = useState<State>({ type: 'new-upload' });
 
   const handleNewFile = async (file: File) => {
     setState({ type: 'processing', filename: file.name });
     return (backend.type === 'local' ?
-      backend.callback(file).then(data => setState({ type: 'results', data })) :
+      backend.callback(file, {
+        hogEnquiryUrl: useHogProxy ? '/hog-api/enquiry' : 'https://houseofgraphs.org/api/enquiry',
+      }).then(data => setState({ type: 'results', data })) :
       sendPdf(backend.url, file).then(raw => {
         if (Array.isArray(raw)) {
           setState({ type: 'results', data: raw });

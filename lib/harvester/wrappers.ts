@@ -286,8 +286,7 @@ export class Graph {
 
 
   /** Sends a request to house of graphs to get the Graph's ID in their database */
-  async get_hog_id() {
-    const url = "https://houseofgraphs.org/api/enquiry"
+  async get_hog_id(url = "https://houseofgraphs.org/api/enquiry") {
     const graph6 = this.toGraph6()
 
     const payload = {
@@ -312,8 +311,10 @@ export class Graph {
       })
     }
     catch (err) {
-      throw new Error("Request to HoG failed")
+      throw new Error("House of Graphs lookup failed: network request blocked or unavailable (possibly CORS). Enable useHogProxy or check the API's CORS configuration.", { cause: err })
     }
+    if (!response.ok)
+      throw new Error(`Request to HoG failed: ${response.status}`)
     const data = await response.json()
     if (data.totalCandidates > 1)
       throw new Error("WARNING: More than one candidate returned")
@@ -324,7 +325,7 @@ export class Graph {
 
 
   /** A detected graph is the interface used to communicate with the frontend. It contains a list of graphs (including HoG ID) and a list of objects the graphs consist of. */
-  static toDetectedGraph(graphs: Graph[], drawing: Drawing, hog: boolean): DetectedGraph {
+  static async toDetectedGraph(graphs: Graph[], drawing: Drawing, hog: boolean, hogEnquiryUrl?: string): Promise<DetectedGraph> {
     const img: string = utils.pngBytesToBase64(drawing.toPNG(2))
     const boundingBox: readonly [number, number, number, number] = drawing.getBounds()
     const caption: string = "" // no caption extraction implemented
@@ -335,12 +336,23 @@ export class Graph {
     const lines: Line[] = []
     const beziers: Bezier[] = []
     const hog_ids: number[] = []
+    const hog_errors: (string | null)[] = []
     for (const graph of graphs) {
       graph6_strings.push(graph.toGraph6())
-      let hog_id = 0
-      if (hog)
-        hog_id = Number(graph.get_hog_id())
+      let hog_id = -1
+      let hog_error: string | null = null
+      if (hog) {
+        try {
+          const id = await graph.get_hog_id(hogEnquiryUrl)
+          if (Number.isInteger(id) && id > 0) hog_id = id
+        } catch (error) {
+          // Preserve extraction results even when the external lookup fails.
+          console.error("House of Graphs lookup failed", error)
+          hog_error = error instanceof Error ? error.message : String(error)
+        }
+      }
       hog_ids.push(hog_id)
+      hog_errors.push(hog_error)
       const next_circles = []
       const next_rects = []
       for (const vertex of graph.vertices) {
@@ -365,7 +377,7 @@ export class Graph {
         }
       }
     }
-    return { graph6_strings, img, boundingBox, caption, circles, rects, lines, beziers, hog_ids }
+    return { graph6_strings, img, boundingBox, caption, circles, rects, lines, beziers, hog_ids, hog_errors }
   }
 }
 

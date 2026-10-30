@@ -14,6 +14,8 @@ export interface DetectedGraph {
   caption: string
   img: string
   hog_ids: number[]
+  /** Lookup errors aligned with graph6_strings; absent for older backends. */
+  hog_errors?: (string | null)[]
 }
 
 export interface Circle {

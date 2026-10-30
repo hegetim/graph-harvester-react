@@ -58,7 +58,7 @@ const makeTableRows = (g: DetectedGraph, hogUrl: string) => {
   if (g.graph6_strings.length === 0) {
     return <tr><td colSpan={2}>No interesting graphs found.</td></tr>;
   } else {
-    return zip(g.graph6_strings, g.hog_ids, g.circles, g.rects).filter(x => x[0]).map(([g6, hog, circs, rects], i) =>
+    return zip(g.graph6_strings, g.hog_ids, g.circles, g.rects, g.hog_errors ?? []).filter(x => x[0]).map(([g6, hog, circs, rects, hogError], i) =>
       <tr key={`${i}${g6}`}>
         <td>
           <div className="gh__results-table-g6cell">
@@ -67,9 +67,10 @@ const makeTableRows = (g: DetectedGraph, hogUrl: string) => {
           </div>
         </td>
         <td>
-          {(hog ?? -1) !== -1
+          {hogError && <div role="alert">HoG lookup failed: {hogError}</div>}
+          {typeof hog === "number" && Number.isInteger(hog) && hog > 0
             ? <a href={`${hogUrl}/${hog}`} target="_blank">{`${hogUrl}/${hog}`}</a>
-            : <React.Fragment>Not found. You may <a href={mkHoGUrl(g6 ?? "", circs ?? [], rects ?? [])} target="_blank">add</a> it.</React.Fragment>}
+            : <React.Fragment>No HoG link available. You may <a href={mkHoGUrl(g6 ?? "", circs ?? [], rects ?? [])} target="_blank">add</a> it.</React.Fragment>}
         </td>
       </tr>
     );

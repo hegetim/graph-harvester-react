@@ -13,10 +13,10 @@ import { Graph, type DetectedGraph } from './wrappers.js'
  * Filesystem and debugging concerns deliberately do not belong in this
  * browser-facing module; see node-debug.ts for the old command-line harness.
  */
-export function execute_file(
+export async function execute_file(
   file: ArrayBuffer | Uint8Array<ArrayBufferLike>,
-  params: { hog: boolean; logs?: string[] },
-): DetectedGraph[] {
+  params: { hog: boolean; hogEnquiryUrl?: string; logs?: string[] },
+): Promise<DetectedGraph[]> {
   const doc = mupdf.PDFDocument.openDocument(file)
   const detectedGraphs: DetectedGraph[] = []
 
@@ -37,7 +37,7 @@ export function execute_file(
           `Page ${pageIndex + 1}, Drawing ${drawingIndex + 1}, Nr ${graphIndex}`,
         )
       })
-      detectedGraphs.push(Graph.toDetectedGraph(graphs, drawing, params.hog))
+      detectedGraphs.push(await Graph.toDetectedGraph(graphs, drawing, params.hog, params.hogEnquiryUrl))
     }
   }
 

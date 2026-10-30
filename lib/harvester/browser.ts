@@ -1,7 +1,10 @@
 import { execute_file } from './pipeline.js'
 import type { DetectedGraph } from '../model/Graph.js'
 
-/** Extract graphs from a PDF selected in a browser. */
-export async function harvestFile(file: File): Promise<DetectedGraph[]> {
-  return execute_file(await file.arrayBuffer(), { hog: false })
+/** Extract graphs from a PDF. Use a same-origin proxy URL if HoG disallows CORS. */
+export async function harvestFile(
+  file: File,
+  options: { hogEnquiryUrl?: string } = {},
+): Promise<DetectedGraph[]> {
+  return execute_file(await file.arrayBuffer(), { hog: true, ...options })
 }
