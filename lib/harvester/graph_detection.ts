@@ -31,10 +31,10 @@ const HEIGHT_WIDTH = true //(Idea: only activate this filter if some vertices re
  * @CHECK Vertices must be visible.*/
 function filter_vertices(vertex_candidates: Path_Metadata[], edge_candidates: Stroke[], params: { drawing_area: number }, logs?: string[]) {
   const n = vertex_candidates.length
-  for (var i = 0; i < n; i++) {
-    let vertex = vertex_candidates.shift()
-    var is_good = true
-    var full_reject = false
+  for (let i = 0; i < n; i++) {
+    const vertex = vertex_candidates.shift()
+    let is_good = true
+    let full_reject = false
     if (!vertex)
       throw new Error("illegal array length")
     // Filter vertices that are not "square-like" enough
@@ -81,7 +81,7 @@ function filter_vertices_by_area(vertex_candidates: Path_Metadata[], edge_candid
     // Clustering
     for (const vertex of vertex_candidates) {
       logs?.push("Color:" + vertex.colorSpace.getType() + ", " + vertex.color + " Alpha: " + vertex.alpha + " " + vertex)
-      var cluster_found = false
+      let cluster_found = false
       for (const cluster of clusters) {
         let avg_size: number = 0
         cluster.forEach(x => avg_size += x.area())
@@ -182,22 +182,22 @@ function build_graphs_from_map(map: Map<Path_Metadata, Stroke[]>, _logs?: string
     const graph = new Graph()
     const vertices: Path_Metadata[] = [vertex]
     while (vertices.length > 0) { // actual DFS
-      let next = vertices.pop()!
+      const next = vertices.pop()!
       if (!visited.has(next)) { //Adds element 0 (imagine an edge called 1 with two endpoints 0,2 in a chain 0 - 1 - 2)
         visited.add(next)
         graph.putVertex(next)
       }
-      let edge = map.get(next)!.find((edge) => !visited.has(edge)) //An arbitrary edge that has not yet been visited
+      const edge = map.get(next)!.find((edge) => !visited.has(edge)) //An arbitrary edge that has not yet been visited
       if (edge) {
-        var previous: Path_Metadata | Stroke | undefined = next // 0
-        var current: Path_Metadata | Stroke | undefined = edge // 1
-        let path: Stroke[] = []
+        let previous: Path_Metadata | Stroke | undefined = next // 0
+        let current: Path_Metadata | Stroke | undefined = edge // 1
+        const path: Stroke[] = []
         do { // Traverse Stroke, until a dead end or a Vertex is found
           if (!visited.has(current)) // Adds 1 in first iteration, 2 in all other
             visited.add(current)
           path.push(current)
           previous = current.traverse(previous) // previous 0 => 2
-          var aux: Path_Metadata | Stroke | undefined = previous // aux => 2
+          const aux: Path_Metadata | Stroke | undefined = previous // aux => 2
           previous = current // previous 2 => 1
           current = aux // current 1 => 2
         } while (current && (current instanceof Stroke))
@@ -229,10 +229,10 @@ export function detect_graphs_from_drawing(drawing: Drawing, logs?: string[]): G
   logs?.push("Called Detect Graphs from Drawing...")
   // Finding Candidates
   let vertex_candidates: Path_Metadata[] = []
-  var edge_candidates: Stroke[] = []
+  let edge_candidates: Stroke[] = []
   //logs?.push("Initializing Graph Detection for new Drawing...\n")
-  for (var path of drawing.paths) {
-    let res = utils.break_path_into_strokes(path, LUMINANCE_THRESHOLD)
+  for (const path of drawing.paths) {
+    const res = utils.break_path_into_strokes(path, LUMINANCE_THRESHOLD)
     if (res.is_vertex_candidate) {
       path.shape = res.shape
       vertex_candidates.push(path)
@@ -242,7 +242,7 @@ export function detect_graphs_from_drawing(drawing: Drawing, logs?: string[]): G
   }
   filter_vertices(vertex_candidates, edge_candidates, { drawing_area: drawing.area() })
   vertex_candidates = filter_vertices_by_area(vertex_candidates, edge_candidates)
-  var implied_vertices = false
+  let implied_vertices = false
   if (vertex_candidates.length == 0)
     implied_vertices = true
   if (edge_candidates.length == 0)
@@ -251,7 +251,7 @@ export function detect_graphs_from_drawing(drawing: Drawing, logs?: string[]): G
   let graph = utils.vertices_within_distance_of_edge(VERTEX_EDGE_DISTANCE_THRESHOLD, edge_candidates, vertex_candidates)
   utils.edges_incident_to_edges(edge_candidates, graph, implied_vertices)
   utils.extend_orphaned_edges(graph, VERTEX_EDGE_DISTANCE_THRESHOLD, EDGE_EXTENSION_THRESHOLD, EDGE_EXTENSION_STEP_SIZE, edge_candidates, vertex_candidates)
-  let { new_graph, new_edges } = utils.split_edges_with_middle_vertex(graph, edge_candidates)
+  const { new_graph, new_edges } = utils.split_edges_with_middle_vertex(graph, edge_candidates)
   graph = new_graph
   edge_candidates = new_edges
   const graphs = build_graphs_from_map(graph)

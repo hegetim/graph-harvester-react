@@ -12,19 +12,19 @@ const DRAWING_AREA_THRESHOLD = 500 //minimum area a drawing needs to have to be 
 
 /** Simply extracts a list of Path objects from a Page */
 export function get_paths_from_page(page: mupdf.Page): Path_Metadata[] {
-  var list = page.toDisplayList()
-  var paths: Path_Metadata[] = []
-  var traceDevice = new mupdf.Device({ // Object used to extract Path elements
+  const list = page.toDisplayList()
+  const paths: Path_Metadata[] = []
+  const traceDevice = new mupdf.Device({ // Object used to extract Path elements
     strokeText(_text: any) { },
     fillImage(_image: any) { },
     fillPath(path: mupdf.Path, evenOdd: boolean, ctm: mupdf.Matrix, colorSpace: mupdf.ColorSpace, color: mupdf.Color, alpha: number) {
-      var data = new Path_Metadata(path, path.getBounds(null as any, ctm), ctm, "fill", colorSpace, color, alpha, undefined, evenOdd)
+      const data = new Path_Metadata(path, path.getBounds(null as any, ctm), ctm, "fill", colorSpace, color, alpha, undefined, evenOdd)
       paths.push(data)
     },
     clipPath(_path: mupdf.Path, _evenOdd: boolean, _ctm: mupdf.Matrix) {
     },
     strokePath(path: mupdf.Path, stroke: mupdf.StrokeState, ctm: mupdf.Matrix, colorSpace: mupdf.ColorSpace, color: mupdf.Color, alpha: number) {
-      var data = new Path_Metadata(path, path.getBounds(stroke, ctm), ctm, "stroke", colorSpace, color, alpha, stroke, undefined)
+      const data = new Path_Metadata(path, path.getBounds(stroke, ctm), ctm, "stroke", colorSpace, color, alpha, stroke, undefined)
       paths.push(data)
     },
     clipStrokePath(_path: mupdf.Path, _stroke: mupdf.StrokeState, _ctm: mupdf.Matrix) {
@@ -37,11 +37,11 @@ export function get_paths_from_page(page: mupdf.Page): Path_Metadata[] {
 
 /** Turns a list of Path objects into a clustered list of Drawings, based on overlapping bounding boxes. */
 export function group_paths_by_bb(paths: Path_Metadata[]): Drawing[] {
-  var drawings: Drawing[] = paths.map(path => new Drawing([path], path.getBounds()))
-  var len_before = drawings.length
-  var break_count = 0
+  let drawings: Drawing[] = paths.map(path => new Drawing([path], path.getBounds()))
+  let len_before = drawings.length
+  let break_count = 0
   while (true) {
-    let new_drawings = geometry_utils.merge_bounding_boxes(drawings)
+    const new_drawings = geometry_utils.merge_bounding_boxes(drawings)
     if (new_drawings.length == len_before)
       break_count += 1
     if (break_count >= 3)
@@ -50,7 +50,7 @@ export function group_paths_by_bb(paths: Path_Metadata[]): Drawing[] {
     len_before = new_drawings.length
   }
   return drawings.filter((x) => {
-    var res = (x.area() > DRAWING_AREA_THRESHOLD)
+    const res = (x.area() > DRAWING_AREA_THRESHOLD)
     return res
   })
 }

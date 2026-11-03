@@ -72,7 +72,7 @@ export class Graph {
     this.vertices = []
     this.metadata = []
 
-    var index = 1
+    let index = 1
     if (vertices) {
       for (const v of vertices) {
         this.used_ids.add(index)
@@ -98,7 +98,7 @@ export class Graph {
   @returns the ID of the vertex or -1 if the specified ID is already in use for a different vertex */
   putVertex(vertex: Path_Metadata | Vertex): number {
     if (vertex instanceof Path_Metadata) {
-      let existing = this.map.get(vertex)
+      const existing = this.map.get(vertex)
       if (existing === undefined) {
         let index = this.smallest_free_id
         while (this.used_ids.has(index)) {
@@ -145,8 +145,8 @@ export class Graph {
     else {
       if (edge.v1_id == edge.v2_id) // Self Loop
         return
-      let v1 = this.vertices.find(x => x.id == edge.v1_id)
-      let v2 = this.vertices.find(x => x.id == edge.v2_id) // TODO a bit inefficient
+      const v1 = this.vertices.find(x => x.id == edge.v1_id)
+      const v2 = this.vertices.find(x => x.id == edge.v2_id) // TODO a bit inefficient
       if (this.edges.some(x => { return (x.v1.id == edge.v1_id && x.v2.id == edge.v2_id) || (x.v1.id == edge.v2_id && x.v2.id == edge.v1_id) })) // equivalent edge already registered
         return
       if (v1 && v2)
@@ -157,14 +157,14 @@ export class Graph {
 
   /** Returns an n x n matrix whereas n is the number of vertices in the graph. A 1 entry in i,j implies an edge between vertex i and vertex j (IDs sorted in increasing order) */
   toAdjacencyMatrix(): number[][] {
-    let sorted_vertices = [... this.vertices].sort((a, b) => a.id - b.id)
+    const sorted_vertices = [... this.vertices].sort((a, b) => a.id - b.id)
     const n = this.vertices.length
     const adjacency: number[][] = Array.from({ length: n }, () => Array(n).fill(0)) // all entries 0 at first
     const index_map = new Map<number, number>()
     sorted_vertices.forEach((v, i) => index_map.set(v.id, i))
     for (const edge of this.edges) {
-      let i1 = index_map.get(edge.v1.id)!
-      let i2 = index_map.get(edge.v2.id)!
+      const i1 = index_map.get(edge.v1.id)!
+      const i2 = index_map.get(edge.v2.id)!
       adjacency[i1]![i2] = 1
       adjacency[i2]![i1] = 1
     }
@@ -175,7 +175,7 @@ export class Graph {
   /** Returns a Graph6 representation of the Graph */
   toGraph6(): string {
     function encode_bits(bits: number[]): string {
-      let result: string[] = []
+      const result: string[] = []
       // Pad length to multiple of 6
       while (bits.length % 6 !== 0)
         bits.push(0)
@@ -189,9 +189,9 @@ export class Graph {
       }
       return result.join("")
     }
-    let adj = this.toAdjacencyMatrix()
+    const adj = this.toAdjacencyMatrix()
     const n = this.vertices.length
-    var result: string = ""
+    let result: string = ""
     if (n < 63)
       result += String.fromCharCode(n + 63)
     else if (n >= 63 && n <= 258047) {
@@ -240,16 +240,16 @@ export class Graph {
       graph.metadata = this.metadata
       const vertices: Vertex[] = [vertex]
       while (vertices.length > 0) { // actual DFS
-        let next = vertices.pop()!
+        const next = vertices.pop()!
         if (!visited.has(next)) {
           visited.add(next)
           graph.putVertex(next)
         }
-        let edge = this.edges.find((edge) => (edge.v1.id == next.id || edge.v2.id == next.id) && !visited.has(edge)) //An arbitrary edge that has not yet been visited
+        const edge = this.edges.find((edge) => (edge.v1.id == next.id || edge.v2.id == next.id) && !visited.has(edge)) //An arbitrary edge that has not yet been visited
         if (edge) {
           visited.add(edge)
-          let other_id = (next.id == edge.v1.id) ? edge.v2.id : edge.v1.id
-          let other = this.vertices.find(v => v.id == other_id)
+          const other_id = (next.id == edge.v1.id) ? edge.v2.id : edge.v1.id
+          const other = this.vertices.find(v => v.id == other_id)
           if (other) {
             graph.putVertex(other)
             graph.putEdge(edge)
@@ -429,7 +429,7 @@ export class Stroke {
       throw new Error("No implementation for splitting curve type edge")
     }
     else {
-      let point = this.walk_along_edge(t)
+      const point = this.walk_along_edge(t)
       if (point.x != x || point.y != y)
         console.log("Split in point: got x:" + x + " y:" + y + " but t yielded x:" + point.x + " y:" + point.y)
       const e1 = new Stroke("line", this.stroke, [this.start, { x, y }])
@@ -447,9 +447,9 @@ export class Stroke {
   /** Splits the edge into multiple sample points in same-length increments (the last two points might be apart up to twice as far)
    @input resolution specifies the number of sample points that should be created */
   toPolyLine(resoltuion: number): Point[] {
-    let increment = 1 / resoltuion
-    var t = increment
-    let points: { x: number, y: number }[] = [this.start]
+    const increment = 1 / resoltuion
+    let t = increment
+    const points: { x: number, y: number }[] = [this.start]
     while (t < (1 - increment)) { // ensures that the last segment is at least increment long
       points.push(this.walk_along_edge(t))
       t += increment
@@ -465,15 +465,15 @@ export class Stroke {
     if (t > 1 || t < 0)
       throw new Error("Illegal argument for t")
     if (this.type == "line") {
-      let x = this.start.x * (1 - t) + this.end.x * (t)
-      let y = this.start.y * (1 - t) + this.end.y * (t)
+      const x = this.start.x * (1 - t) + this.end.x * (t)
+      const y = this.start.y * (1 - t) + this.end.y * (t)
       return { x, y }
     }
-    let p0: { x: number, y: number } = this.start
-    let p1: { x: number, y: number } = this.control_pts![0]!
-    let p2: { x: number, y: number } = this.control_pts![1]!
-    let p3: { x: number, y: number } = this.end
-    let u = 1 - t
+    const p0: { x: number, y: number } = this.start
+    const p1: { x: number, y: number } = this.control_pts![0]!
+    const p2: { x: number, y: number } = this.control_pts![1]!
+    const p3: { x: number, y: number } = this.end
+    const u = 1 - t
     return {
       x:
         u * u * u * p0.x +
@@ -494,9 +494,9 @@ export class Stroke {
    * @param distance: the distance in pixels. If the distance relative to the edges' length is over a certain threshold, the distance is cut to be within that threshold instead
    */
   extend_from_end(distance: number): Point {
-    var dx;
-    var dy;
-    var len;
+    let dx;
+    let dy;
+    let len;
     if (this.type === "line") {
       dx = this.end.x - this.start.x
       dy = this.end.y - this.start.y
@@ -523,9 +523,9 @@ export class Stroke {
 
   /** Behaves exactly like extend_from_end() for the first endpoint */
   extend_from_start(distance: number): Point {
-    var dx;
-    var dy;
-    var len;
+    let dx;
+    let dy;
+    let len;
     if (this.type === "line") {
       dx = this.start.x - this.end.x
       dy = this.start.y - this.end.y
@@ -655,13 +655,13 @@ export class Path_Metadata {
 
   /** admittedly weird and makeshift function to merge two vertex candidates */
   static merge(p1: Path_Metadata, p2: Path_Metadata) {
-    let pos = { x: (p1.center().x + p2.center().x) / 2, y: (p1.center().y + p2.center().y) / 2 } as Point
-    let x_min = p1.minX < p2.minX ? p1.minX : p2.minX
-    let x_max = p1.maxX > p2.maxX ? p1.maxX : p2.maxX
-    let y_min = p1.minY < p2.minY ? p1.minY : p2.minY
-    let y_max = p1.maxY > p2.maxY ? p1.maxY : p2.maxY
-    let x_length = Math.abs(x_max - x_min)
-    let y_length = Math.abs(y_max - y_min)
+    const pos = { x: (p1.center().x + p2.center().x) / 2, y: (p1.center().y + p2.center().y) / 2 } as Point
+    const x_min = p1.minX < p2.minX ? p1.minX : p2.minX
+    const x_max = p1.maxX > p2.maxX ? p1.maxX : p2.maxX
+    const y_min = p1.minY < p2.minY ? p1.minY : p2.minY
+    const y_max = p1.maxY > p2.maxY ? p1.maxY : p2.maxY
+    const x_length = Math.abs(x_max - x_min)
+    const y_length = Math.abs(y_max - y_min)
     let edge_length = x_length > y_length ? x_length : y_length
 
     const is_dominating = p1.area() > p2.area()
@@ -700,12 +700,12 @@ export class Drawing {
         let y_min = Infinity
         let x_max = -Infinity
         let y_max = -Infinity
-        for (var path of paths) {
-          let bb = path.getBounds()
-          var x1 = bb[0]
-          var y1 = bb[1]
-          var x2 = bb[2]
-          var y2 = bb[3]
+        for (const path of paths) {
+          const bb = path.getBounds()
+          const x1 = bb[0]
+          const y1 = bb[1]
+          const x2 = bb[2]
+          const y2 = bb[3]
           if (x_min > x1)
             x_min = x1
           if (y_min > y1)
@@ -753,21 +753,21 @@ export class Drawing {
 
   toPNG(scale: number = 5) {
     const matrix = mupdf.Matrix.scale(scale, scale)
-    let boundingbox = this.getBounds()
-    let { x: x1, y: y1 } = utils.transform_point(matrix, boundingbox[0], boundingbox[1])
+    const boundingbox = this.getBounds()
+    const { x: x1, y: y1 } = utils.transform_point(matrix, boundingbox[0], boundingbox[1])
     boundingbox[0] = x1
     boundingbox[1] = y1
-    let { x: x2, y: y2 } = utils.transform_point(matrix, boundingbox[2], boundingbox[3])
+    const { x: x2, y: y2 } = utils.transform_point(matrix, boundingbox[2], boundingbox[3])
     boundingbox[2] = x2
     boundingbox[3] = y2
     const pixmap = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, boundingbox, false)
     pixmap.clear(255)
-    let drawDevice = new mupdf.DrawDevice(matrix, pixmap)
+    const drawDevice = new mupdf.DrawDevice(matrix, pixmap)
 
-    for (var path of this.paths) {
+    for (const path of this.paths) {
       switch (path.type) {
         case "fill":
-          let evenOdd = path.evenOdd ? path.evenOdd : true
+          const evenOdd = path.evenOdd ? path.evenOdd : true
           drawDevice.fillPath(path.path, evenOdd, path.ctm, path.colorSpace, path.color, path.alpha)
           continue
         case "stroke":

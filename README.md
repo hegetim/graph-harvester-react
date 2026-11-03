@@ -50,6 +50,23 @@ configure `/hog-api/*` to forward to `https://houseofgraphs.org/api/*` if proxyi
 is enabled; the static build does not include a proxy server.
 
 
+Development and tests
+---------------------
+
+From the package directory:
+
+```sh
+npm ci
+npm test
+npm run test:watch
+npm run build
+```
+
+The build type-checks the library, build configuration, and tests. Tests and PDF
+fixtures are not included in the production bundle or npm package. See
+[tests/README.md](tests/README.md) for coverage, snapshot updates, and fixture notes.
+
+
 Publication
 -----------
 

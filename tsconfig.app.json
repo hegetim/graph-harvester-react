@@ -33,6 +33,7 @@
     "lib"
   ],
   "exclude": [
+    "tests",
     "lib/harvester/node-debug.ts",
     "lib/harvester/debug_exports.ts"
   ]

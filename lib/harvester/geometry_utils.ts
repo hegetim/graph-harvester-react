@@ -24,14 +24,14 @@ const MATCH_MULTIPLE_EDGES = true
  * @warning may need to be executed repeatedly until convergence*/
 export function merge_bounding_boxes(drawings: Drawing[]): Drawing[] {
   const tree = new RBush<Drawing>()
-  var result: Drawing[] = []
-  var already_used: Map<Drawing, number> = new Map
+  const result: Drawing[] = []
+  const already_used: Map<Drawing, number> = new Map
   tree.load(drawings)
   for (var drawing of drawings) {
     //For each drawing, check for intersections, only taking drawings not yet used
-    let neighbors = tree.search(drawing).filter((x) => !already_used.has(x) && x !== drawing)
+    const neighbors = tree.search(drawing).filter((x) => !already_used.has(x) && x !== drawing)
     //Get index of cluster drawing belongs to
-    var index = already_used.get(drawing)
+    let index = already_used.get(drawing)
     if (index === undefined) {
       index = result.length
       result.push(drawing)
@@ -39,11 +39,11 @@ export function merge_bounding_boxes(drawings: Drawing[]): Drawing[] {
     }
     //Add neighbors to corresponding cluster   
     if (neighbors.length > 0) {
-      for (var n of neighbors) {
-        var cluster = result[index]
+      for (const n of neighbors) {
+        const cluster = result[index]
         if (cluster === undefined)
           throw new Error("Error: cluster with index" + index + "is out of bounds")
-        let merged = Drawing.merge(cluster, n)
+        const merged = Drawing.merge(cluster, n)
         result[index] = merged
         already_used.set(n, index)
       }
@@ -86,8 +86,8 @@ export function merge_overlapping_vertices(vertex_candidates: Path_Metadata[], l
     return distance <= (radiusSum * radiusSum);
   }
   const tree = new RBush<Path_Metadata>
-  var result: Path_Metadata[] = []
-  var already_used: Map<Path_Metadata, number> = new Map()
+  const result: Path_Metadata[] = []
+  const already_used: Map<Path_Metadata, number> = new Map()
   tree.load(vertex_candidates)
   for (const vertex of vertex_candidates) {
     const bounds = scale_bb_by_factor(vertex.getBounds(), MERGE_OVERLAP_FACTOR)
@@ -99,18 +99,18 @@ export function merge_overlapping_vertices(vertex_candidates: Path_Metadata[], l
       }
       else return false
     })
-    var index = already_used.get(vertex)
+    let index = already_used.get(vertex)
     if (index === undefined) {
       index = result.length
       result.push(vertex)
       already_used.set(vertex, index)
     }
     if (neighbors.length > 0) {
-      for (var n of neighbors) {
-        var cluster = result[index]
+      for (const n of neighbors) {
+        const cluster = result[index]
         if (cluster === undefined)
           throw new Error("Error: cluster with index" + index + "is out of bounds")
-        let merged = Path_Metadata.merge(cluster, n)
+        const merged = Path_Metadata.merge(cluster, n)
         result[index] = merged
         already_used.set(n, index)
         logs?.push("Merged two overlapping vertices..\nV1: " + vertex + "\nV2: " + n)
@@ -182,20 +182,20 @@ function detect_arrow_head(first_stroke: Stroke, second_stroke: Stroke, logs?: s
 @warning if there is even just a fraction of a pixel between the start and endpoint, it won't be considered a closed loop */
 export function break_path_into_strokes(path: Path_Metadata, luminance_threshold: number, logs?: string[]): { strokes: Stroke[], full_reject: boolean, is_vertex_candidate: boolean, shape: "circle" | "rectangle" | "path" } {
   const is_fill = path.type == "fill"
-  var stroke_segments: Stroke[] = []
-  var is_closed = false
-  var full_reject = is_brighter_than(path, luminance_threshold)
-  var bezier_counter = 0
-  var shape: "circle" | "rectangle" | "path" = "rectangle"
-  var last: { x: number, y: number } | undefined
-  var loop_start: { x: number, y: number } | undefined
-  var strokeStyle = is_fill ? default_stroke : path.stroke
-  var ctm = path.ctm
+  const stroke_segments: Stroke[] = []
+  let is_closed = false
+  const full_reject = is_brighter_than(path, luminance_threshold)
+  let bezier_counter = 0
+  let shape: "circle" | "rectangle" | "path" = "rectangle"
+  let last: { x: number, y: number } | undefined
+  let loop_start: { x: number, y: number } | undefined
+  const strokeStyle = is_fill ? default_stroke : path.stroke
+  const ctm = path.ctm
   logs?.push("Breaking new path object: " + path)
 
-  var path_walker = {
+  const path_walker = {
     moveTo: function (x: number, y: number) {
-      var point = transform_point(ctm, x, y)
+      const point = transform_point(ctm, x, y)
       logs?.push("moving to " + point.x + " " + point.y + "\n")
       last = point
       loop_start = point
@@ -203,7 +203,7 @@ export function break_path_into_strokes(path: Path_Metadata, luminance_threshold
     lineTo: function (x: number, y: number) {
       if (!last)
         throw new Error("lineTo without moveTo")
-      var end = transform_point(ctm, x, y)
+      const end = transform_point(ctm, x, y)
       logs?.push("line from " + last.x + " " + last.y + " to " + end.x + " " + end.y + "\n")
       stroke_segments.push(new Stroke("line", strokeStyle!, [last, end]))
       last = end
@@ -214,9 +214,9 @@ export function break_path_into_strokes(path: Path_Metadata, luminance_threshold
       if (shape != "circle")
         shape = "circle"
       bezier_counter += 1
-      var p1 = transform_point(ctm, x1, y1)
-      var p2 = transform_point(ctm, x2, y2)
-      var p3 = transform_point(ctm, x3, y3)
+      const p1 = transform_point(ctm, x1, y1)
+      const p2 = transform_point(ctm, x2, y2)
+      const p3 = transform_point(ctm, x3, y3)
       logs?.push("curve from " + last.x + " " + last.y + " through " + p1.x + " " + p1.y + " and " + p2.x + " " + p2.y + " to " + p3.x + " " + p3.y + "\n")
       stroke_segments.push(new Stroke("curve", strokeStyle!, [last, p1, p2, p3]))
       last = p3
@@ -239,9 +239,9 @@ export function break_path_into_strokes(path: Path_Metadata, luminance_threshold
   // Detect Arrows
   let is_arrow = false
   if (stroke_segments.length >= 2) {
-    for (var i = 0; i < stroke_segments.length - 1; i++) {
-      let s1 = stroke_segments[i]!
-      let s2 = stroke_segments[i + 1]!
+    for (let i = 0; i < stroke_segments.length - 1; i++) {
+      const s1 = stroke_segments[i]!
+      const s2 = stroke_segments[i + 1]!
       if (detect_arrow_head(s1, s2, logs)) {
         is_arrow = true
         break
@@ -257,14 +257,14 @@ export function break_path_into_strokes(path: Path_Metadata, luminance_threshold
 
 /**Takes a bounding box array [xmin, ymin, xmax, ymax] and expands it by the factor into every direction, originating from the center */
 export function scale_bb_by_factor(bb: mupdf.Rect, factor: number): mupdf.Rect {
-  var width = (bb[2] - bb[0]) * factor
-  var height = (bb[3] - bb[1]) * factor
-  var center_x = (bb[2] + bb[0]) / 2
-  var center_y = (bb[3] + bb[1]) / 2
-  var minX = center_x - (width / 2)
-  var maxX = center_x + (width / 2)
-  var minY = center_y - (height / 2)
-  var maxY = center_y + (height / 2)
+  const width = (bb[2] - bb[0]) * factor
+  const height = (bb[3] - bb[1]) * factor
+  const center_x = (bb[2] + bb[0]) / 2
+  const center_y = (bb[3] + bb[1]) / 2
+  const minX = center_x - (width / 2)
+  const maxX = center_x + (width / 2)
+  const minY = center_y - (height / 2)
+  const maxY = center_y + (height / 2)
   return [minX, minY, maxX, maxY] as mupdf.Rect
 }
 
@@ -381,9 +381,9 @@ export function vertices_within_distance_of_edge(distance_threshold: number, edg
   const point_to_edge: Stroke[] = [] // using this, index of point leads to corresponding edge
   const edge_to_index_range = new Map<Stroke, { first_index: number, last_index: number }>()
   const points: Point[] = []
-  var index = 0
+  let index = 0
   for (const edge of edges) {
-    let edge_points = edge.toPolyLine(STROKE_APPROXIMATION_RESOLUTION)
+    const edge_points = edge.toPolyLine(STROKE_APPROXIMATION_RESOLUTION)
     edge_to_index_range.set(edge, { first_index: index, last_index: (index + edge_points.length - 1) })
     for (const point of edge_points) {
       points.push(point)
@@ -399,12 +399,12 @@ export function vertices_within_distance_of_edge(distance_threshold: number, edg
 
   for (const v of vertices) { // O(n)
     logs?.push("Checking incidence for vertex " + v)
-    let bb = scale_bb_by_factor(v.getBounds(), distance_threshold)
+    const bb = scale_bb_by_factor(v.getBounds(), distance_threshold)
     // Make a query for all points within distance of bounding box of v
     const foundIds = tree.range(bb[0], bb[1], bb[2], bb[3])
     const foundEdges: Map<Stroke, number[]> = new Map()
     foundIds.forEach(x => {
-      let edge = point_to_edge[x]!
+      const edge = point_to_edge[x]!
       if (!foundEdges.has(edge))
         foundEdges.set(edge, [])
       foundEdges.get(edge)!.push(x)
@@ -412,11 +412,11 @@ export function vertices_within_distance_of_edge(distance_threshold: number, edg
     const incident_edges: Stroke[] = []
     for (const [edge, indices] of foundEdges) { // O(m)
       logs?.push("Found edge: " + edge)
-      let { first_index, last_index } = edge_to_index_range.get(edge)!
-      var lowest_index = indices[0]!
-      var lowest_distance = Infinity
-      for (var i = 0; i < indices.length; i++) { // O(1) => total runtime quadratic
-        let index = indices[i]!
+      const { first_index, last_index } = edge_to_index_range.get(edge)!
+      let lowest_index = indices[0]!
+      let lowest_distance = Infinity
+      for (let i = 0; i < indices.length; i++) { // O(1) => total runtime quadratic
+        const index = indices[i]!
         if (index == first_index) {
           lowest_index = index
           break
@@ -497,17 +497,17 @@ export function split_edges_with_middle_vertex(graph: Map<Path_Metadata, Stroke[
     logs?.push("Next edge: " + edge.start.x + ", " + edge.start.y + " | " + edge.end.x + ", " + edge.end.y + "\n")
     const edge_points = edge.toPolyLine(STROKE_APPROXIMATION_RESOLUTION)
     const split_points: { vertex: Path_Metadata, t: number }[] = []
-    var start_vertex = edge.start_incident
-    var end_vertex = edge.end_incident
+    let start_vertex = edge.start_incident
+    let end_vertex = edge.end_incident
 
     for (const vertex of vertices) { // determine for all vertices on the edge which point is closest, ensuring no more than one vertex per endpoint
       const { x, y } = vertex.center()
-      var shortest_distance = Infinity
-      var shortest_index = 0
+      let shortest_distance = Infinity
+      let shortest_index = 0
       if (start_vertex === vertex || end_vertex === vertex)
         continue
       for (var i = 0; i < edge_points.length; i++) { // determine closest endpoint for vertex
-        let { x: px, y: py } = edge_points[i]!
+        const { x: px, y: py } = edge_points[i]!
         const distance = ((px - x) * (px - x)) + ((py - y) * (py - y)) // euclidean distance without sqrt
         if (distance < shortest_distance) {
           shortest_distance = distance
@@ -696,7 +696,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
       continue
     else
       logs?.push("Trying to rescue an orphan at point " + point.x + ", " + point.y + " for Edge " + edge.start.x + ", " + edge.start.y + " | " + edge.end.x + ", " + edge.end.y + " [Start, End]: " + (edge.start_incident ? "true" : "false") + (edge.end_incident ? " true" : " false") + "\n")
-    var search_radius = edge.stroke.getLineWidth()
+    let search_radius = edge.stroke.getLineWidth()
     if (edge.length_squared() >= MINIMUM_EDGE_LENGTH * MINIMUM_EDGE_LENGTH)
       search_radius = Math.max(edge.stroke.getLineWidth(), MINIMUM_SEARCH_RADIUS)
 
@@ -713,10 +713,10 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
         return false
       else if (!other_start && other_edge.end_incident instanceof Path_Metadata)
         return false
-      for (var j = 0; j < indices.length; j++) {
+      for (let j = 0; j < indices.length; j++) {
         if (j == key)
           continue
-        let other = indices[j]!
+        const other = indices[j]!
         if (value == other || value == other + n || value == other - n) { // Two endpoints of the same edge detected
           return false
         }
@@ -725,7 +725,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
     })
     logs?.push("After filtering, " + indices.length + " hits remain\n")
     for (const index of indices) {
-      let edge = edges[index < n ? index : index - n]!
+      const edge = edges[index < n ? index : index - n]!
       logs?.push("Hit: Edge " + edge.start.x + ", " + edge.start.y + " | " + edge.end.x + ", " + edge.end.y + " [Start, End]: " + (edge.start_incident ? "true" : "false") + (edge.end_incident ? " true" : " false") + "\n")
     }
     switch (indices.length) {
@@ -734,8 +734,8 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
       case 1: // edge is continued
         if (false && implied_vertices) { // Produces too many false positives
           logs?.push("Found implied vertex: x =" + point.x + "y =" + point.y + "\n")
-          let vertex = Path_Metadata.default(point, edge.stroke.getLineWidth())
-          let edgelist: Stroke[] = [edge]
+          const vertex = Path_Metadata.default(point, edge.stroke.getLineWidth())
+          const edgelist: Stroke[] = [edge]
           for (const index of indices) {
             const other_edge = index < n ? (edges[index]!) : (edges[index - n]!)
             if (index < n)
@@ -752,7 +752,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
           break
         }
         else {
-          let index = indices[0]!
+          const index = indices[0]!
           const other_start = (index < n)
           const other_edge = other_start ? (edges[index]!) : (edges[index - n]!)
           // suggestion: maybe infer a vertex if StrokeStyle differs too much
@@ -762,8 +762,8 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
       default: // more than 1 indicates an implied vertex
         if (implied_vertices) {
           logs?.push("Found implied vertex: x =" + point.x + "y =" + point.y + "\n")
-          let vertex = Path_Metadata.default(point, edge.stroke.getLineWidth())
-          let edgelist: Stroke[] = [edge]
+          const vertex = Path_Metadata.default(point, edge.stroke.getLineWidth())
+          const edgelist: Stroke[] = [edge]
           for (const index of indices) {
             const other_edge = index < n ? (edges[index]!) : (edges[index - n]!)
             if (index < n)
@@ -817,9 +817,9 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
     }
   }
   for (const ambig_edge of ambiguous_edges) {
-    let edge = ambig_edge.edge
-    let start = ambig_edge.start
-    let indices = ambig_edge.indices
+    const edge = ambig_edge.edge
+    const start = ambig_edge.start
+    const indices = ambig_edge.indices
     if ((start && edge.start_incident) || (!start && edge.end_incident)) {
       continue
     }

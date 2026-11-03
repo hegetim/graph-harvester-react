@@ -100,14 +100,14 @@ const mkHoGUrl = (graph6: string, circles: Circle[], rects: Rectangle[]) => {
     if (max_x > 999999) {
       x *= 999999 / max_x;
     }
-    let x_str = Math.floor(x).toString();
+    const x_str = Math.floor(x).toString();
 
     let y = vertex.y;
     // limit to 6 digits
     if (max_y > 999999) {
       y *= 999999 / max_y;
     }
-    let y_str = Math.abs(Math.floor(y) - Math.min(max_y, 999999)).toString();  // y has to be inverted for HoG
+    const y_str = Math.abs(Math.floor(y) - Math.min(max_y, 999999)).toString();  // y has to be inverted for HoG
 
     // Add to the result array in the required format
     result.push(`${x_str}_${y_str}`);
