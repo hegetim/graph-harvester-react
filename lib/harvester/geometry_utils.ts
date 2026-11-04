@@ -5,7 +5,7 @@
 import { Drawing, Path_Metadata, Stroke, type Point, default_stroke } from "./wrappers.js"
 import RBush from "rbush"
 import KDBush from 'kdbush'
-import * as mupdf from "mupdf"
+import type { Matrix, Rect, StrokeStyle } from './drawing-model.js'
 
 // Approximate every bezier curve by 30 straight line segments
 const STROKE_APPROXIMATION_RESOLUTION = 30
@@ -60,9 +60,9 @@ export function merge_overlapping_vertices(vertex_candidates: Path_Metadata[], l
   function do_circular_vertices_overlap(base: Path_Metadata, circle: Path_Metadata): boolean {
     // 1. Calculate a radius for Base
     let r1: number;
-    if (base.type === "stroke" && base.stroke && base.stroke.getLineWidth() > 5) {
+    if (base.type === "stroke" && base.stroke && base.stroke.lineWidth > 5) {
       // Thick stroke dot style
-      r1 = base.stroke.getLineWidth() / 2;
+      r1 = base.stroke.lineWidth / 2;
     } else {
       // Bézier loop or filled circle style
       const w = base.maxX - base.minX;
@@ -72,9 +72,9 @@ export function merge_overlapping_vertices(vertex_candidates: Path_Metadata[], l
 
     // 2. Calculate a radius for Circle
     let r2: number;
-    if (circle.type === "stroke" && circle.stroke && circle.stroke.getLineWidth() > 5) {
+    if (circle.type === "stroke" && circle.stroke && circle.stroke.lineWidth > 5) {
       // Thick stroke dot style
-      r2 = circle.stroke.getLineWidth() / 2;
+      r2 = circle.stroke.lineWidth / 2;
     } else {
       // Bézier loop or filled circle style
       const w = circle.maxX - circle.minX;
@@ -122,7 +122,7 @@ export function merge_overlapping_vertices(vertex_candidates: Path_Metadata[], l
 
 
 /**Applies a matrix transformation on the point, returning its new coordinates*/
-export function transform_point(ctm: mupdf.Matrix, x: number, y: number): Point {
+export function transform_point(ctm: Matrix, x: number, y: number): Point {
   return {
     x: ctm[0] * x + ctm[2] * y + ctm[4],
     y: ctm[1] * x + ctm[3] * y + ctm[5]
@@ -231,7 +231,14 @@ export function break_path_into_strokes(path: Path_Metadata, luminance_threshold
       logs?.push("closing Path\n")
     }
   }
-  path.path.walk(path_walker)
+  for (const command of path.path) {
+    switch (command.type) {
+      case 'moveTo': path_walker.moveTo(command.x, command.y); break
+      case 'lineTo': path_walker.lineTo(command.x, command.y); break
+      case 'curveTo': path_walker.curveTo(command.x1, command.y1, command.x2, command.y2, command.x3, command.y3); break
+      case 'closePath': path_walker.closePath(); break
+    }
+  }
   if (loop_start && last && loop_start.x == last.x && loop_start.y == last.y)
     is_closed = true
   if (!is_closed)
@@ -256,7 +263,7 @@ export function break_path_into_strokes(path: Path_Metadata, luminance_threshold
 
 
 /**Takes a bounding box array [xmin, ymin, xmax, ymax] and expands it by the factor into every direction, originating from the center */
-export function scale_bb_by_factor(bb: mupdf.Rect, factor: number): mupdf.Rect {
+export function scale_bb_by_factor(bb: Rect, factor: number): Rect {
   const width = (bb[2] - bb[0]) * factor
   const height = (bb[3] - bb[1]) * factor
   const center_x = (bb[2] + bb[0]) / 2
@@ -265,14 +272,14 @@ export function scale_bb_by_factor(bb: mupdf.Rect, factor: number): mupdf.Rect {
   const maxX = center_x + (width / 2)
   const minY = center_y - (height / 2)
   const maxY = center_y + (height / 2)
-  return [minX, minY, maxX, maxY] as mupdf.Rect
+  return [minX, minY, maxX, maxY]
 }
 
 export function is_brighter_than(vertex: Path_Metadata, threshold: number): boolean {
   const color = vertex.color
   if (!color)
     return false
-  switch (vertex.colorSpace.getType()) {
+  switch (vertex.colorSpace) {
     case "Gray":
       return color[0]! >= threshold
     case "RGB":
@@ -608,17 +615,19 @@ export function split_edges_with_middle_vertex(graph: Map<Path_Metadata, Stroke[
 
 
 /**Returns a similarity score between 0 (completely different) and 5 (identical) */
-function stroke_similarity(a: mupdf.StrokeState, b: mupdf.StrokeState) {
+export function stroke_similarity(a: StrokeStyle, b: StrokeStyle) {
   let score = 0
-  if (a.getLineWidth === b.getLineWidth)
+  if (a.lineWidth === b.lineWidth)
     score += 1
-  if (a.getLineCap === b.getLineCap)
+  if (a.lineCap === b.lineCap)
     score += 1
-  if (a.getLineJoin === b.getLineJoin)
+  if (a.lineJoin === b.lineJoin)
     score += 1
-  if (a.getDashPhase === b.getDashPhase)
+  if (a.dashPhase === b.dashPhase)
     score += 1
-  if (a.getDashes === b.getDashes)
+  const aDashes = a.dashes
+  const bDashes = b.dashes
+  if (aDashes.length === bDashes.length && aDashes.every((dash, index) => dash === bDashes[index]))
     score += 1
   return score
 }
@@ -674,7 +683,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
   if (logs) {
     logs?.push("Rescuing orphans...\n")
     for (const edge of edges) {
-      logs?.push("Edge [(" + edge.start.x + ", " + edge.start.y + "),( " + edge.end.x + ", " + edge.end.y + ")] BEFORE [Start, End]: " + (edge.start_incident ? "true" : "false") + (edge.end_incident ? " true" : " false") + " Linewidth: " + edge.stroke.getLineWidth() + "\n")
+      logs?.push("Edge [(" + edge.start.x + ", " + edge.start.y + "),( " + edge.end.x + ", " + edge.end.y + ")] BEFORE [Start, End]: " + (edge.start_incident ? "true" : "false") + (edge.end_incident ? " true" : " false") + " Linewidth: " + edge.stroke.lineWidth + "\n")
     }
   }
   for (const { x, y } of points)
@@ -696,9 +705,9 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
       continue
     else
       logs?.push("Trying to rescue an orphan at point " + point.x + ", " + point.y + " for Edge " + edge.start.x + ", " + edge.start.y + " | " + edge.end.x + ", " + edge.end.y + " [Start, End]: " + (edge.start_incident ? "true" : "false") + (edge.end_incident ? " true" : " false") + "\n")
-    let search_radius = edge.stroke.getLineWidth()
+    let search_radius = edge.stroke.lineWidth
     if (edge.length_squared() >= MINIMUM_EDGE_LENGTH * MINIMUM_EDGE_LENGTH)
-      search_radius = Math.max(edge.stroke.getLineWidth(), MINIMUM_SEARCH_RADIUS)
+      search_radius = Math.max(edge.stroke.lineWidth, MINIMUM_SEARCH_RADIUS)
 
     var indices = tree.within(point.x, point.y, search_radius)
     logs?.push("Found " + indices.length + " initial hits \n")
@@ -734,7 +743,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
       case 1: // edge is continued
         if (false && implied_vertices) { // Produces too many false positives
           logs?.push("Found implied vertex: x =" + point.x + "y =" + point.y + "\n")
-          const vertex = Path_Metadata.default(point, edge.stroke.getLineWidth())
+          const vertex = Path_Metadata.default(point, edge.stroke.lineWidth)
           const edgelist: Stroke[] = [edge]
           for (const index of indices) {
             const other_edge = index < n ? (edges[index]!) : (edges[index - n]!)
@@ -762,7 +771,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
       default: // more than 1 indicates an implied vertex
         if (implied_vertices) {
           logs?.push("Found implied vertex: x =" + point.x + "y =" + point.y + "\n")
-          const vertex = Path_Metadata.default(point, edge.stroke.getLineWidth())
+          const vertex = Path_Metadata.default(point, edge.stroke.lineWidth)
           const edgelist: Stroke[] = [edge]
           for (const index of indices) {
             const other_edge = index < n ? (edges[index]!) : (edges[index - n]!)

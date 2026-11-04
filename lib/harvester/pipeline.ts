@@ -2,44 +2,64 @@
  * SPDX-License-Identifier: MIT
  */
 
-import * as mupdf from 'mupdf'
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import type { DocumentInitParameters } from 'pdfjs-dist/types/src/display/api'
 import { detect_graphs_from_drawing } from './graph_detection.js'
-import * as pdf_extraction from './pdf_extraction.js'
+import { group_paths_by_bb } from './pdf_extraction.js'
 import { Graph, type DetectedGraph } from './wrappers.js'
+import { extractPDFJSPage } from './pdfjs-adapter.js'
+import { renderPDFJSPreview, type PreviewOptions } from './pdfjs-preview.js'
 
-/**
- * Run graph extraction on PDF bytes supplied by the caller.
- *
- * Filesystem and debugging concerns deliberately do not belong in this
- * browser-facing module; see node-debug.ts for the old command-line harness.
- */
+interface PipelineOptions {
+  hog: boolean
+  hogEnquiryUrl?: string
+  logs?: string[]
+  /** Internal injection points for Node tests; not part of harvestFile's public API. */
+  previewOptions?: PreviewOptions
+  pdfOptions?: Pick<DocumentInitParameters, 'standardFontDataUrl' | 'cMapUrl' | 'wasmUrl' | 'iccUrl' | 'useSystemFonts' | 'useWorkerFetch'>
+}
+
+/** Extract graphs from PDF bytes without detaching or modifying caller-owned data. */
 export async function execute_file(
   file: ArrayBuffer | Uint8Array<ArrayBufferLike>,
-  params: { hog: boolean; hogEnquiryUrl?: string; logs?: string[] },
+  params: PipelineOptions,
 ): Promise<DetectedGraph[]> {
-  const doc = mupdf.PDFDocument.openDocument(file)
-  const detectedGraphs: DetectedGraph[] = []
-
-  for (let pageIndex = 0; pageIndex < doc.countPages(); pageIndex++) {
-    const page = doc.loadPage(pageIndex)
-    const paths = pdf_extraction.get_paths_from_page(page)
-    const drawings = pdf_extraction
-      .group_paths_by_bb(paths)
-      .sort((a, b) => a.minX - b.minX)
-
-    for (let drawingIndex = 0; drawingIndex < drawings.length; drawingIndex++) {
-      const drawing = drawings[drawingIndex]
-      if (drawing === undefined) continue
-
-      const graphs = detect_graphs_from_drawing(drawing, params.logs)
-      graphs.forEach((graph, graphIndex) => {
-        graph.metadata.push(
-          `Page ${pageIndex + 1}, Drawing ${drawingIndex + 1}, Nr ${graphIndex}`,
-        )
-      })
-      detectedGraphs.push(await Graph.toDetectedGraph(graphs, drawing, params.hog, params.hogEnquiryUrl))
-    }
+  if (typeof window !== 'undefined') {
+    // Asset emitted by Vite from the same pinned package as the main library.
+    const { default: workerUrl } = await import('./pdfjs-worker.js')
+    GlobalWorkerOptions.workerSrc = workerUrl
   }
-
-  return detectedGraphs
+  // PDF.js may transfer the supplied bytes to its worker.
+  const bytes = file instanceof Uint8Array ? Uint8Array.from(file) : new Uint8Array(file.slice(0))
+  const task = getDocument({ ...params.pdfOptions, data: bytes, stopAtErrors: true })
+  try {
+    const doc = await task.promise
+    const detectedGraphs: DetectedGraph[] = []
+    for (let pageIndex = 0; pageIndex < doc.numPages; pageIndex++) {
+      const page = await doc.getPage(pageIndex + 1)
+      try {
+        const { paths, warnings } = await extractPDFJSPage(page)
+        for (const warning of warnings) {
+          const message = `PDF extraction, page ${pageIndex + 1}: ${warning}`
+          if (params.logs) params.logs.push(message)
+          else console.warn(message)
+        }
+        const drawings = group_paths_by_bb(paths).sort((a, b) => a.minX - b.minX)
+        for (let drawingIndex = 0; drawingIndex < drawings.length; drawingIndex++) {
+          const drawing = drawings[drawingIndex]!
+          const graphs = detect_graphs_from_drawing(drawing, params.logs)
+          graphs.forEach((graph, graphIndex) => {
+            graph.metadata.push(`Page ${pageIndex + 1}, Drawing ${drawingIndex + 1}, Nr ${graphIndex}`)
+          })
+          detectedGraphs.push(await Graph.toDetectedGraph(graphs, drawing, params.hog, params.hogEnquiryUrl,
+            (group, scale) => renderPDFJSPreview(page, group.getBounds(), { ...params.previewOptions, scale })))
+        }
+      } finally {
+        page.cleanup()
+      }
+    }
+    return detectedGraphs
+  } finally {
+    await task.destroy()
+  }
 }

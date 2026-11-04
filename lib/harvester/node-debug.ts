@@ -7,6 +7,7 @@ import * as pdf_extraction from './pdf_extraction.js'
 import { execute_file } from './pipeline.js'
 import { Graph } from './wrappers.js'
 import { export_drawing, exportGraph } from './debug_exports.js'
+import { get_paths_from_page } from './mupdf-adapter.js'
 
 export function execute() {
   const logs: string[] = ['Logs of the most recent iteration\n']
@@ -16,7 +17,7 @@ export function execute() {
 
   for (let pageIndex = 0; pageIndex < doc.countPages(); pageIndex++) {
     const page = doc.loadPage(pageIndex)
-    const paths = pdf_extraction.get_paths_from_page(page)
+    const paths = get_paths_from_page(page)
     const drawings = pdf_extraction.group_paths_by_bb(paths).sort((a, b) => a.minX - b.minX)
     drawings.forEach((drawing, drawingIndex) => {
       export_drawing(drawing, `test_files/test_d${drawingIndex + 1}`)

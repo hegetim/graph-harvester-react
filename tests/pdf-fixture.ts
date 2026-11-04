@@ -11,6 +11,12 @@ export function pdfFixture(streams: string[]): Uint8Array {
       `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
     )
   }
+  return pdfObjects(objects)
+}
+
+// Also supports hand-authored resources (e.g. Form XObjects and ExtGState).
+// Objects must use ASCII and reference object 1 as the catalog.
+export function pdfObjects(objects: string[]): Uint8Array {
   let pdf = '%PDF-1.4\n'
   const offsets = [0]
   for (const [index, object] of objects.entries()) {

@@ -53,7 +53,7 @@ function filter_vertices(vertex_candidates: Path_Metadata[], edge_candidates: St
     }
     // Filter invisible vertices
     if (vertex.alpha <= ALPHA_THRESHOLD || utils.is_brighter_than(vertex, LUMINANCE_THRESHOLD)) {
-      logs?.push("Filtering vertex:\n" + vertex + "\n Alpha: " + vertex.alpha + " Color: " + vertex.colorSpace.getType() + ", " + vertex.color)
+      logs?.push("Filtering vertex:\n" + vertex + "\n Alpha: " + vertex.alpha + " Color: " + vertex.colorSpace + ", " + vertex.color)
       is_good = false
       full_reject = true //does not fully exclude such edges, since some objects never become a vertex candidate, but break_paths_into_stroke() does the same check for all objects => this line of code should never trigger.
     }
@@ -80,7 +80,7 @@ function filter_vertices_by_area(vertex_candidates: Path_Metadata[], edge_candid
     logs?.push("Case 1: Found " + vertex_candidates.length + " intial vertices")
     // Clustering
     for (const vertex of vertex_candidates) {
-      logs?.push("Color:" + vertex.colorSpace.getType() + ", " + vertex.color + " Alpha: " + vertex.alpha + " " + vertex)
+      logs?.push("Color:" + vertex.colorSpace + ", " + vertex.color + " Alpha: " + vertex.alpha + " " + vertex)
       let cluster_found = false
       for (const cluster of clusters) {
         let avg_size: number = 0

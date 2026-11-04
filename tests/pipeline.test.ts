@@ -1,9 +1,22 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test, vi } from 'vitest'
-import { execute_file } from '../lib/harvester/pipeline'
+import { createCanvas } from '@napi-rs/canvas'
+import { fileURLToPath } from 'node:url'
+import { execute_file as executePDFJS } from '../lib/harvester/pipeline'
+import { executeReference } from './mupdf-reference'
+import { harvestFile } from '../lib/harvester/browser'
 import { pdfFixture } from './pdf-fixture'
 
-const fixtures = ['plain.pdf', 'multi.pdf', 'single_page.pdf', 'multi_page.pdf']
+function execute_file(file: ArrayBuffer | Uint8Array<ArrayBufferLike>, options: { hog: boolean; hogEnquiryUrl?: string; logs?: string[] }) {
+  return executePDFJS(file, {
+    ...options,
+    logs: options.logs ?? [],
+    previewOptions: { createCanvas: (width, height) => createCanvas(width, height) as unknown as HTMLCanvasElement },
+    pdfOptions: { useSystemFonts: false, standardFontDataUrl: fileURLToPath(new URL('../node_modules/pdfjs-dist/standard_fonts/', import.meta.url)) },
+  })
+}
+
+const fixtures = ['plain.pdf', 'multi.pdf', 'single_page.pdf', 'multi_page.pdf', 'transforms.pdf', 'exotic.pdf']
 
 // Ignore sub-millipoint floating point noise, but preserve all geometry/topology.
 function normalize(value: unknown): unknown {
@@ -17,7 +30,7 @@ function normalize(value: unknown): unknown {
 
 test.each(fixtures)('PDF extraction baseline: %s', async (fixture) => {
   const bytes = await readFile(new URL(`./assets/${fixture}`, import.meta.url))
-  const results = await execute_file(bytes, { hog: false })
+  const results = await executeReference(bytes)
 
   for (const drawing of results) {
     // Check image validity without tying the baseline to a renderer's PNG bytes.
@@ -34,10 +47,46 @@ test.each(fixtures)('PDF extraction baseline: %s', async (fixture) => {
   expect(normalize(geometry)).toMatchSnapshot()
 })
 
+test.each(fixtures)('PDF.js pipeline produces previews for %s', async fixture => {
+  const bytes = await readFile(new URL(`./assets/${fixture}`, import.meta.url))
+  const results = await execute_file(bytes, { hog: false })
+  expect(results.length).toBeGreaterThan(0)
+  for (const result of results) {
+    expect(Buffer.from(result.img, 'base64').subarray(0, 8))
+      .toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    expect(result.hog_ids).toEqual(result.graph6_strings.map(() => -1))
+    expect(result.hog_errors).toEqual(result.graph6_strings.map(() => null))
+  }
+  expect(fetch).not.toHaveBeenCalled()
+})
+
+test('harvestFile uses the PDF.js pipeline and forwards the HoG endpoint', async () => {
+  const bytes = await readFile(new URL('./assets/plain.pdf', import.meta.url))
+  vi.stubGlobal('document', { createElement: () => createCanvas(1, 1) })
+  vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ totalCandidates: 0 })))
+  const results = await harvestFile(new File([bytes], 'plain.pdf', { type: 'application/pdf' }), { hogEnquiryUrl: '/custom/enquiry' })
+  expect(results.flatMap(result => result.graph6_strings).length).toBeGreaterThan(0)
+  expect(fetch).toHaveBeenCalledWith('/custom/enquiry', expect.objectContaining({ method: 'POST' }))
+  expect(Buffer.from(results[0]!.img, 'base64').subarray(0, 8))
+    .toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+})
+
+test('unsupported clipping produces a page-specific diagnostic', async () => {
+  const logs: string[] = []
+  const results = await execute_file(pdfFixture(['0 0 100 100 re W n 10 10 80 80 re f']), { hog: false, logs })
+  expect(results).toHaveLength(1)
+  expect(logs).toContain('PDF extraction, page 1: Path clipping is ignored')
+})
+
 test('accepts ArrayBuffer input as well as typed PDF bytes', async () => {
   const bytes = await readFile(new URL('./assets/plain.pdf', import.meta.url))
-  const typed = await execute_file(bytes, { hog: false })
-  const buffer = await execute_file(Uint8Array.from(bytes).buffer, { hog: false })
+  const original = Uint8Array.from(bytes)
+  const input = original.slice()
+  const typed = await execute_file(input, { hog: false })
+  expect(input).toEqual(original)
+  const arrayBuffer = original.slice().buffer
+  const buffer = await execute_file(arrayBuffer, { hog: false })
+  expect(new Uint8Array(arrayBuffer)).toEqual(original)
   expect(buffer).toEqual(typed)
 })
 
@@ -71,6 +120,16 @@ test('lookup failure preserves extracted geometry and reports errors', async () 
     return drawing
   }))
   expect(fetch).toHaveBeenCalledWith('/test/enquiry', expect.anything())
+})
+
+test('a preview failure rejects the operation and a later extraction still succeeds', async () => {
+  const data = pdfFixture(['0 g 0 0 100 100 re f'])
+  await expect(executePDFJS(data, {
+    hog: false,
+    logs: [],
+    previewOptions: { createCanvas: () => { throw new Error('canvas unavailable') } },
+  })).rejects.toThrow('canvas unavailable')
+  expect(await execute_file(data, { hog: false })).toHaveLength(1)
 })
 
 test('rejects malformed PDF input', async () => {

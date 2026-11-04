@@ -1,8 +1,9 @@
 import * as fs from 'node:fs'
 import type { Graph, Drawing } from './wrappers.js'
+import { renderDrawing } from './mupdf-adapter.js'
 
 export function export_drawing(drawing: Drawing, name: string) {
-  fs.writeFileSync(name + '.png', drawing.toPNG())
+  fs.writeFileSync(name + '.png', renderDrawing(drawing))
 }
 
 export function exportGraph(graph: Graph, name: string) {

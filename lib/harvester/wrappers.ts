@@ -3,19 +3,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-import * as mupdf from 'mupdf'
 import * as utils from './geometry_utils.js'
+import { defaultStroke, identityMatrix, type Matrix, type Rect, type PathCommand, type PathColor, type StrokeStyle } from './drawing-model.js'
 import type { Bezier, Circle, DetectedGraph, Line, Point, Rectangle } from '../model/Graph.js'
 export type { Bezier, Circle, DetectedGraph, Line, Point, Rectangle } from '../model/Graph.js'
 
 
-export const default_stroke = new mupdf.StrokeState({
-  lineCap: "Butt",
-  lineJoin: "Bevel",
-  lineWidth: 0,
-  miterLimit: 1.414,
-  dashPhase: 0
-})
+export const default_stroke = defaultStroke
 
 
 /**A high level implementation of a graph edge. */
@@ -325,8 +319,9 @@ export class Graph {
 
 
   /** A detected graph is the interface used to communicate with the frontend. It contains a list of graphs (including HoG ID) and a list of objects the graphs consist of. */
-  static async toDetectedGraph(graphs: Graph[], drawing: Drawing, hog: boolean, hogEnquiryUrl?: string): Promise<DetectedGraph> {
-    const img: string = utils.pngBytesToBase64(drawing.toPNG(2))
+  static async toDetectedGraph(graphs: Graph[], drawing: Drawing, hog: boolean, hogEnquiryUrl: string | undefined, renderDrawing: (drawing: Drawing, scale: number) => Uint8Array<ArrayBufferLike> | string | Promise<Uint8Array<ArrayBufferLike> | string>): Promise<DetectedGraph> {
+    const preview = await renderDrawing(drawing, 2)
+    const img = typeof preview === 'string' ? preview : utils.pngBytesToBase64(preview)
     const boundingBox: readonly [number, number, number, number] = drawing.getBounds()
     const caption: string = "" // no caption extraction implemented
 
@@ -384,7 +379,7 @@ export class Graph {
 /** Currently used for edge candidates */
 export class Stroke {
   type: "line" | "curve"
-  stroke: mupdf.StrokeState
+  stroke: StrokeStyle
   start: Point
   end: Point
   control_pts?: Point[]
@@ -395,7 +390,7 @@ export class Stroke {
   // Describes how long the stroke needs to be, relative to how long it will be extended. A value of 3 means that the stroke can only be extended by 1/3 its original length.
   static readonly EXTENSION_MAXIMUM = 3 // 3 seems best
 
-  constructor(type: "line" | "curve", stroke: mupdf.StrokeState, points: Point[]) {
+  constructor(type: "line" | "curve", stroke: StrokeStyle, points: Point[]) {
     this.type = type
     this.stroke = stroke
     if (type == "line" && points.length == 2) {
@@ -584,22 +579,22 @@ export class Stroke {
 
 /** Currently used ambiguously as either a single Path object, which is part of a Drawing, or as a vertex candidate */
 export class Path_Metadata {
-  path: mupdf.Path
+  path: PathCommand[]
   minX: number
   minY: number
   maxX: number
   maxY: number
-  ctm: mupdf.Matrix
+  ctm: Matrix
   type: "fill" | "stroke"
   shape?: "circle" | "rectangle" | "path"
-  stroke?: mupdf.StrokeState
+  stroke?: StrokeStyle
   evenOdd?: boolean
-  colorSpace: mupdf.ColorSpace
-  color: mupdf.Color
+  colorSpace: string
+  color: number[]
   alpha: number
 
 
-  constructor(path: mupdf.Path, bounds: mupdf.Rect, ctm: mupdf.Matrix, type: "fill" | "stroke", colorSpace: mupdf.ColorSpace, color: mupdf.Color, alpha: number, stroke?: mupdf.StrokeState, evenOdd?: boolean, shape?: "circle" | "rectangle" | "path") {
+  constructor(path: PathCommand[], bounds: Rect, ctm: Matrix, type: "fill" | "stroke", color: PathColor, alpha: number, stroke?: StrokeStyle, evenOdd?: boolean, shape?: "circle" | "rectangle" | "path") {
     this.path = path
     this.minX = bounds[0]
     this.minY = bounds[1]
@@ -609,13 +604,12 @@ export class Path_Metadata {
     this.type = type
     if (shape)
       this.shape = shape
-    this.colorSpace = colorSpace
-    this.color = color
+    this.colorSpace = color.space
+    this.color = color.components
     this.alpha = alpha
     if (stroke)
       this.stroke = stroke
-    if (evenOdd)
-      this.evenOdd = evenOdd
+    this.evenOdd = evenOdd
   }
 
 
@@ -642,14 +636,14 @@ export class Path_Metadata {
     return { x: (this.maxX + this.minX) / 2, y: (this.maxY + this.minY) / 2 } as Point
   }
 
-  getBounds(): mupdf.Rect {
-    return [this.minX, this.minY, this.maxX, this.maxY] as mupdf.Rect
+  getBounds(): Rect {
+    return [this.minX, this.minY, this.maxX, this.maxY]
   }
 
   /** returns a Path_Metadata object with desired center position, size, and default configurations */
   static default(pos: Point, edge_length: number = 10) {
     edge_length /= 2
-    return new Path_Metadata(new mupdf.Path(), [pos.x - edge_length, pos.y - edge_length, pos.x + edge_length, pos.y + edge_length], mupdf.Matrix.identity, "fill", mupdf.ColorSpace.DeviceRGB, [0, 1, 0], 1, undefined, true, "rectangle",)
+    return new Path_Metadata([], [pos.x - edge_length, pos.y - edge_length, pos.x + edge_length, pos.y + edge_length], [...identityMatrix], "fill", { space: 'RGB', components: [0, 1, 0] }, 1, undefined, true, "rectangle")
   }
 
 
@@ -680,7 +674,7 @@ export class Drawing {
   maxY: number
 
 
-  constructor(paths: Path_Metadata[], bounds?: mupdf.Rect) {
+  constructor(paths: Path_Metadata[], bounds?: Rect) {
     this.paths = paths
     if (bounds) {
       this.minX = bounds[0]
@@ -743,7 +737,7 @@ export class Drawing {
 
 
   getBounds() {
-    return [this.minX, this.minY, this.maxX, this.maxY] as mupdf.Rect
+    return [this.minX, this.minY, this.maxX, this.maxY] as Rect
   }
 
 
@@ -751,31 +745,6 @@ export class Drawing {
     return (this.maxX - this.minX) * (this.maxY - this.minY)
   }
 
-  toPNG(scale: number = 5) {
-    const matrix = mupdf.Matrix.scale(scale, scale)
-    const boundingbox = this.getBounds()
-    const { x: x1, y: y1 } = utils.transform_point(matrix, boundingbox[0], boundingbox[1])
-    boundingbox[0] = x1
-    boundingbox[1] = y1
-    const { x: x2, y: y2 } = utils.transform_point(matrix, boundingbox[2], boundingbox[3])
-    boundingbox[2] = x2
-    boundingbox[3] = y2
-    const pixmap = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, boundingbox, false)
-    pixmap.clear(255)
-    const drawDevice = new mupdf.DrawDevice(matrix, pixmap)
-
-    for (const path of this.paths) {
-      switch (path.type) {
-        case "fill":
-          const evenOdd = path.evenOdd ? path.evenOdd : true
-          drawDevice.fillPath(path.path, evenOdd, path.ctm, path.colorSpace, path.color, path.alpha)
-          continue
-        case "stroke":
-          drawDevice.strokePath(path.path, path.stroke ? path.stroke : default_stroke, path.ctm, path.colorSpace, path.color, path.alpha)
-      }
-    }
-    return pixmap.asPNG()
-  }
 }
 
 

@@ -14,6 +14,21 @@ test('harvestFile forwards file bytes and lookup options', async () => {
   })
 })
 
+test('harvestFile forwards optional PDF.js resource paths', async () => {
+  const file = new File([], 'sample.pdf')
+  vi.mocked(execute_file).mockResolvedValueOnce([])
+  await harvestFile(file, { pdfjsAssetsUrl: '/assets/pdfjs///' })
+  expect(execute_file).toHaveBeenLastCalledWith(await file.arrayBuffer(), {
+    hog: true,
+    pdfOptions: {
+      cMapUrl: '/assets/pdfjs/cmaps/',
+      standardFontDataUrl: '/assets/pdfjs/standard_fonts/',
+      wasmUrl: '/assets/pdfjs/wasm/',
+      iccUrl: '/assets/pdfjs/iccs/',
+    },
+  })
+})
+
 test('harvestFile enables lookup by default', async () => {
   const file = new File([], 'empty.pdf')
   vi.mocked(execute_file).mockResolvedValueOnce([])

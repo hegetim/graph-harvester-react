@@ -5,15 +5,26 @@
 import { defineConfig, esmExternalRequirePlugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from "path"
+import { readFileSync } from 'node:fs'
 import dts from "vite-plugin-dts"
 import { libInjectCss } from "vite-plugin-lib-inject-css"
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Emit worker URLs relative to the library chunk, including under subpaths.
+  base: './',
   plugins: [
     react(),
     dts({ tsconfigPath: './tsconfig.app.json', bundleTypes: true }),
     libInjectCss(),
+    {
+      name: 'include-pdfjs-license',
+      apply: 'build',
+      generateBundle() {
+        this.emitFile({ type: 'asset', fileName: 'PDFJS-LICENSE.txt',
+          source: readFileSync(resolve(import.meta.dirname, 'node_modules/pdfjs-dist/LICENSE')) })
+      },
+    },
     esmExternalRequirePlugin({ external: ['react', /^node:/] }),
   ],
   build: {

@@ -1,0 +1,511 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PDF.js exposes the vector drawings in exotic.pdf 1`] = `
+[
+  {
+    "operators": {
+      "constructPath": 37,
+      "restore": 47,
+      "save": 47,
+      "setDash": 2,
+      "setFillRGBColor": 27,
+      "setGState": 2,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 37,
+      "setStrokeRGBColor": 2,
+    },
+    "page": 1,
+    "paints": {
+      "fill": 21,
+      "stroke": 16,
+    },
+    "pathCommands": {
+      "closePath": 1,
+      "curveTo": 131,
+      "lineTo": 24,
+      "moveTo": 47,
+    },
+    "rotation": 0,
+    "view": [
+      193.427,
+      645.802,
+      317.642,
+      763.947,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      -193.427,
+      763.947,
+    ],
+  },
+  {
+    "operators": {
+      "constructPath": 37,
+      "eoClip": 1,
+      "restore": 47,
+      "save": 47,
+      "setFillRGBColor": 12,
+      "setLineCap": 6,
+      "setLineJoin": 1,
+      "setLineWidth": 2,
+      "setStrokeRGBColor": 1,
+    },
+    "page": 2,
+    "paints": {
+      "fill": 20,
+      "stroke": 16,
+    },
+    "pathCommands": {
+      "closePath": 2,
+      "curveTo": 145,
+      "lineTo": 6,
+      "moveTo": 47,
+    },
+    "rotation": 0,
+    "view": [
+      241.427,
+      661.802,
+      365.642,
+      779.947,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      -241.427,
+      779.947,
+    ],
+  },
+  {
+    "operators": {
+      "constructPath": 50,
+      "dependency": 1,
+      "paintImageXObject": 1,
+      "restore": 71,
+      "save": 71,
+      "setFillRGBColor": 45,
+      "setLineCap": 1,
+      "setLineJoin": 2,
+      "setLineWidth": 40,
+      "setStrokeRGBColor": 13,
+      "transform": 1,
+    },
+    "page": 3,
+    "paints": {
+      "fill": 30,
+      "stroke": 30,
+    },
+    "pathCommands": {
+      "closePath": 13,
+      "curveTo": 120,
+      "lineTo": 56,
+      "moveTo": 60,
+    },
+    "rotation": 0,
+    "view": [
+      241.427,
+      645.802,
+      365.642,
+      763.947,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      -241.427,
+      763.947,
+    ],
+  },
+]
+`;
+
+exports[`PDF.js exposes the vector drawings in multi.pdf 1`] = `
+[
+  {
+    "operators": {
+      "constructPath": 36,
+      "restore": 46,
+      "save": 46,
+      "setFillRGBColor": 26,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 36,
+    },
+    "page": 1,
+    "paints": {
+      "fill": 20,
+      "stroke": 16,
+    },
+    "pathCommands": {
+      "closePath": 1,
+      "curveTo": 127,
+      "lineTo": 16,
+      "moveTo": 46,
+    },
+    "rotation": 0,
+    "view": [
+      193.427,
+      645.802,
+      317.642,
+      763.947,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      -193.427,
+      763.947,
+    ],
+  },
+  {
+    "operators": {
+      "constructPath": 36,
+      "restore": 46,
+      "save": 46,
+      "setFillRGBColor": 26,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 36,
+    },
+    "page": 2,
+    "paints": {
+      "fill": 20,
+      "stroke": 16,
+    },
+    "pathCommands": {
+      "closePath": 1,
+      "curveTo": 145,
+      "lineTo": 3,
+      "moveTo": 46,
+    },
+    "rotation": 0,
+    "view": [
+      241.427,
+      661.802,
+      365.642,
+      779.947,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      -241.427,
+      779.947,
+    ],
+  },
+  {
+    "operators": {
+      "constructPath": 50,
+      "restore": 70,
+      "save": 70,
+      "setFillRGBColor": 35,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 40,
+    },
+    "page": 3,
+    "paints": {
+      "fill": 30,
+      "stroke": 30,
+    },
+    "pathCommands": {
+      "closePath": 13,
+      "curveTo": 120,
+      "lineTo": 56,
+      "moveTo": 60,
+    },
+    "rotation": 0,
+    "view": [
+      241.427,
+      645.802,
+      365.642,
+      763.947,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      -241.427,
+      763.947,
+    ],
+  },
+]
+`;
+
+exports[`PDF.js exposes the vector drawings in multi_page.pdf 1`] = `
+[
+  {
+    "operators": {
+      "beginText": 2,
+      "constructPath": 36,
+      "dependency": 3,
+      "endText": 2,
+      "moveText": 28,
+      "paintFormXObjectBegin": 1,
+      "paintFormXObjectEnd": 1,
+      "restore": 47,
+      "save": 47,
+      "setFillRGBColor": 26,
+      "setFont": 4,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 36,
+      "showText": 28,
+      "transform": 1,
+    },
+    "page": 1,
+    "paints": {
+      "fill": 20,
+      "stroke": 16,
+    },
+    "pathCommands": {
+      "closePath": 1,
+      "curveTo": 127,
+      "lineTo": 16,
+      "moveTo": 46,
+    },
+    "rotation": 0,
+    "view": [
+      0,
+      0,
+      595.276,
+      841.89,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      0,
+      841.89,
+    ],
+  },
+  {
+    "operators": {
+      "beginText": 1,
+      "dependency": 1,
+      "endText": 1,
+      "moveText": 49,
+      "setFont": 1,
+      "showText": 49,
+    },
+    "page": 2,
+    "paints": {},
+    "pathCommands": {},
+    "rotation": 0,
+    "view": [
+      0,
+      0,
+      595.276,
+      841.89,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      0,
+      841.89,
+    ],
+  },
+  {
+    "operators": {
+      "beginText": 2,
+      "constructPath": 86,
+      "dependency": 1,
+      "endText": 2,
+      "moveText": 11,
+      "paintFormXObjectBegin": 2,
+      "paintFormXObjectEnd": 2,
+      "restore": 118,
+      "save": 118,
+      "setFillRGBColor": 61,
+      "setFont": 3,
+      "setLineCap": 2,
+      "setLineJoin": 2,
+      "setLineWidth": 76,
+      "showText": 11,
+      "transform": 2,
+    },
+    "page": 3,
+    "paints": {
+      "fill": 50,
+      "stroke": 46,
+    },
+    "pathCommands": {
+      "closePath": 14,
+      "curveTo": 265,
+      "lineTo": 59,
+      "moveTo": 106,
+    },
+    "rotation": 0,
+    "view": [
+      0,
+      0,
+      595.276,
+      841.89,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      0,
+      841.89,
+    ],
+  },
+]
+`;
+
+exports[`PDF.js exposes the vector drawings in plain.pdf 1`] = `
+[
+  {
+    "operators": {
+      "constructPath": 27,
+      "restore": 37,
+      "save": 37,
+      "setFillRGBColor": 17,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 27,
+    },
+    "page": 1,
+    "paints": {
+      "fill": 20,
+      "stroke": 7,
+    },
+    "pathCommands": {
+      "closePath": 2,
+      "curveTo": 120,
+      "lineTo": 17,
+      "moveTo": 37,
+    },
+    "rotation": 0,
+    "view": [
+      225.427,
+      645.802,
+      349.642,
+      763.947,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      -225.427,
+      763.947,
+    ],
+  },
+]
+`;
+
+exports[`PDF.js exposes the vector drawings in single_page.pdf 1`] = `
+[
+  {
+    "operators": {
+      "beginText": 2,
+      "constructPath": 27,
+      "dependency": 3,
+      "endText": 2,
+      "moveText": 28,
+      "paintFormXObjectBegin": 1,
+      "paintFormXObjectEnd": 1,
+      "restore": 38,
+      "save": 38,
+      "setFillRGBColor": 17,
+      "setFont": 4,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 27,
+      "showText": 28,
+      "transform": 1,
+    },
+    "page": 1,
+    "paints": {
+      "fill": 20,
+      "stroke": 7,
+    },
+    "pathCommands": {
+      "closePath": 2,
+      "curveTo": 120,
+      "lineTo": 17,
+      "moveTo": 37,
+    },
+    "rotation": 0,
+    "view": [
+      0,
+      0,
+      595.276,
+      841.89,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      0,
+      841.89,
+    ],
+  },
+]
+`;
+
+exports[`PDF.js exposes the vector drawings in transforms.pdf 1`] = `
+[
+  {
+    "operators": {
+      "beginText": 2,
+      "constructPath": 36,
+      "dependency": 3,
+      "endText": 2,
+      "moveText": 20,
+      "paintFormXObjectBegin": 1,
+      "paintFormXObjectEnd": 1,
+      "restore": 49,
+      "save": 49,
+      "setFillRGBColor": 26,
+      "setFont": 4,
+      "setLineCap": 1,
+      "setLineJoin": 1,
+      "setLineWidth": 36,
+      "showText": 20,
+      "transform": 5,
+    },
+    "page": 1,
+    "paints": {
+      "fill": 20,
+      "stroke": 16,
+    },
+    "pathCommands": {
+      "closePath": 1,
+      "curveTo": 127,
+      "lineTo": 16,
+      "moveTo": 46,
+    },
+    "rotation": 0,
+    "view": [
+      0,
+      0,
+      595.276,
+      841.89,
+    ],
+    "viewportTransform": [
+      1,
+      0,
+      0,
+      -1,
+      0,
+      841.89,
+    ],
+  },
+]
+`;
