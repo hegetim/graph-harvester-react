@@ -16,6 +16,21 @@ export function pdfFixture(streams: string[]): Uint8Array {
 
 // Also supports hand-authored resources (e.g. Form XObjects and ExtGState).
 // Objects must use ASCII and reference object 1 as the catalog.
+export function patternFixture(): Uint8Array {
+  const content = '1 g 1 G q /Pattern cs /P scn /Pattern CS /P SCN ' +
+    '10 10 80 80 re B Q 110 10 80 80 re B ' +
+    '/Pattern cs /P scn 10 110 80 80 re f 0 g 110 110 80 80 re f'
+  const pattern = '0 0 0 rg 0 0 5 10 re f'
+  const stream = (data: string, extra = '') => `<< ${extra} /Length ${data.length} >>\nstream\n${data}\nendstream`
+  return pdfObjects([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Count 1 /Kids [3 0 R] >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << /Pattern << /P 5 0 R >> >> /Contents 4 0 R >>',
+    stream(content),
+    stream(pattern, '/Type /Pattern /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 10 10] /XStep 10 /YStep 10 /Resources << >>'),
+  ])
+}
+
 export function pdfObjects(objects: string[]): Uint8Array {
   let pdf = '%PDF-1.4\n'
   const offsets = [0]

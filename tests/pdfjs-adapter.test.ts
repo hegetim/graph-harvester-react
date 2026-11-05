@@ -4,10 +4,10 @@ import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { expect, test } from 'vitest'
 import { extractPDFJSPage } from '../lib/harvester/pdfjs-adapter'
 import { get_paths_from_page } from '../lib/harvester/mupdf-adapter'
-import { break_path_into_strokes } from '../lib/harvester/geometry_utils'
+import { break_path_into_strokes, is_brighter_than } from '../lib/harvester/geometry_utils'
 import { group_paths_by_bb } from '../lib/harvester/pdf_extraction'
 import { detect_graphs_from_drawing } from '../lib/harvester/graph_detection'
-import { pdfFixture, pdfObjects } from './pdf-fixture'
+import { patternFixture, pdfFixture, pdfObjects } from './pdf-fixture'
 
 async function inspect(data: Uint8Array, fn: (page: Awaited<ReturnType<Awaited<ReturnType<typeof getDocument>['promise']>['getPage']>>) => Promise<void>) {
   const task = getDocument({ data, stopAtErrors: true, useSystemFonts: false })
@@ -42,6 +42,21 @@ test.each(['S', 's', 'f', 'f*', 'B', 'B*', 'b', 'b*'])('empty %s path is a no-op
     expect(result.paths).toHaveLength(1)
     expect(result.paths[0]!.type).toBe('fill')
     expect(result.paths[0]!.getBounds()).toEqual([0, 350, 50, 400])
+  })
+})
+
+test('pattern fills and strokes are retained with unknown color and graphics state is restored', async () => {
+  await inspect(patternFixture(), async page => {
+    const { paths, warnings } = await extractPDFJSPage(page)
+    expect(warnings).toEqual(['Pattern colors are treated as unknown for graph detection'])
+    expect(paths.map(path => path.type)).toEqual(['fill', 'stroke', 'fill', 'stroke', 'fill', 'fill'])
+    expect(paths.map(path => path.colorSpace)).toEqual(['Pattern', 'Pattern', 'RGB', 'RGB', 'Pattern', 'RGB'])
+    expect(paths.slice(0, 2).map(path => path.color)).toEqual([[], []])
+    expect(is_brighter_than(paths[0]!, 0.8)).toBe(false)
+    expect(is_brighter_than(paths[1]!, 0.8)).toBe(false)
+    expect(paths[2]!.color).toEqual([1, 1, 1])
+    expect(paths[3]!.color).toEqual([1, 1, 1])
+    expect(paths[5]!.color).toEqual([0, 0, 0])
   })
 })
 

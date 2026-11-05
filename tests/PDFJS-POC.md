@@ -139,8 +139,10 @@ Any behavior differences must be reviewed, not hidden by refreshing snapshots.
 - Test additional color spaces, patterns, shadings, soft masks, optional content,
   annotations, `/UserUnit`, and more unusual PDFs as needed. The PoC does not
   claim support for them. The adapter reports clipping, shading, transparency
-  groups, and soft masks; pattern colors throw. Other unsupported content may
-  still be ignored, so warnings are not an exhaustive compatibility check.
+  groups, and soft masks. Pattern colors produce a warning and are retained as
+  unknown colors for detection; page previews render the original pattern.
+  Other unsupported content may still be ignored, so warnings are not an
+  exhaustive compatibility check.
 - PDF.js loading and cleanup are integrated into the local harvesting pipeline;
   its worker is emitted from the pinned runtime dependency. Test the packaged
   application in real browsers, including worker loading and auxiliary resources.

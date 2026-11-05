@@ -71,8 +71,9 @@ their names, and forward that directory URL to `harvestFile`:
 Use the URL appropriate for your deployment base path. Without these assets,
 PDF.js may be unable to render or interpret PDFs that need them. Extraction
 currently ignores clipping and reports this and other known limitations in the
-browser console; unsupported pattern colors fail explicitly. Stroke bounds are
-approximate. Test representative documents before relying on local extraction.
+browser console. Pattern colors are treated as unknown for graph detection,
+so results may differ; page previews still render the original patterns. Stroke
+bounds are approximate. Test representative documents before relying on local extraction.
 
 The demo defaults to proxying; open `/?hogProxy=false` to test direct requests.
 Vite supplies the development/preview proxy only. Production webservers must

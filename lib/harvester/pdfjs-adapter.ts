@@ -3,7 +3,7 @@
  */
 
 // This adapter targets the pinned PDF.js 6.5.438 operator representation.
-// It is not yet used by the production pipeline; see tests/PDFJS-POC.md.
+// See tests/PDFJS-POC.md for compatibility and known limitations.
 import { OPS, version } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api'
 import type { Matrix, PathCommand, Rect, StrokeStyle } from './drawing-model.js'
@@ -14,6 +14,8 @@ interface GraphicsState {
   stroke: StrokeStyle
   fill: number[]
   strokeColor: number[]
+  fillPattern: boolean
+  strokePattern: boolean
   fillAlpha: number
   strokeAlpha: number
 }
@@ -138,7 +140,7 @@ export async function extractPDFJSPage(page: PDFPageProxy): Promise<PDFJSExtract
   let state: GraphicsState = {
     ctm: matrix(page.getViewport({ scale: 1 }).transform),
     stroke: { lineWidth: 1, lineCap: 0, lineJoin: 0, miterLimit: 10, dashPhase: 0, dashes: [] },
-    fill: [0, 0, 0], strokeColor: [0, 0, 0], fillAlpha: 1, strokeAlpha: 1,
+    fill: [0, 0, 0], strokeColor: [0, 0, 0], fillPattern: false, strokePattern: false, fillAlpha: 1, strokeAlpha: 1,
   }
   const stack: GraphicsState[] = []
   const paths: Path_Metadata[] = []
@@ -166,8 +168,8 @@ export async function extractPDFJSPage(page: PDFPageProxy): Promise<PDFJSExtract
       case OPS.setLineJoin: state.stroke.lineJoin = args[0]; break
       case OPS.setMiterLimit: state.stroke.miterLimit = args[0]; break
       case OPS.setDash: state.stroke.dashes = Array.from(args[0]); state.stroke.dashPhase = args[1]; break
-      case OPS.setFillRGBColor: state.fill = rgb(args[0]); break
-      case OPS.setStrokeRGBColor: state.strokeColor = rgb(args[0]); break
+      case OPS.setFillRGBColor: state.fill = rgb(args[0]); state.fillPattern = false; break
+      case OPS.setStrokeRGBColor: state.strokeColor = rgb(args[0]); state.strokePattern = false; break
       case OPS.setFillTransparent: state.fillAlpha = 0; break
       case OPS.setStrokeTransparent: state.strokeAlpha = 0; break
       case OPS.setGState:
@@ -184,8 +186,14 @@ export async function extractPDFJSPage(page: PDFPageProxy): Promise<PDFJSExtract
         break
       case OPS.clip: case OPS.eoClip:
         warnings.add('Path clipping is ignored'); break
-      case OPS.setFillColorN: case OPS.setStrokeColorN:
-        throw new Error('PDF.js pattern colors are not supported by the extraction adapter')
+      case OPS.setFillColorN:
+        state.fillPattern = true
+        warnings.add('Pattern colors are treated as unknown for graph detection')
+        break
+      case OPS.setStrokeColorN:
+        state.strokePattern = true
+        warnings.add('Pattern colors are treated as unknown for graph detection')
+        break
       case OPS.shadingFill: warnings.add('Shading is not extracted as paths'); break
       case OPS.beginGroup: warnings.add('Transparency group semantics are not fully supported'); break
       case OPS.constructPath: {
@@ -203,11 +211,11 @@ export async function extractPDFJSPage(page: PDFPageProxy): Promise<PDFJSExtract
         if (!fill && !stroke) throw new Error(`Unsupported PDF.js painting operation ${paint}`)
         const evenOdd = paint === OPS.eoFill || paint === OPS.eoFillStroke || paint === OPS.closeEOFillStroke
         if (fill) paths.push(new Path_Metadata(commands, bounds(commands, state.ctm), [...state.ctm], 'fill',
-          { space: 'RGB', components: [...state.fill] }, state.fillAlpha, undefined, evenOdd))
+          { space: state.fillPattern ? 'Pattern' : 'RGB', components: state.fillPattern ? [] : [...state.fill] }, state.fillAlpha, undefined, evenOdd))
         if (stroke) {
           const style = { ...state.stroke, dashes: [...state.stroke.dashes] }
           paths.push(new Path_Metadata(commands, bounds(commands, state.ctm, style), [...state.ctm], 'stroke',
-            { space: 'RGB', components: [...state.strokeColor] }, state.strokeAlpha, style))
+            { space: state.strokePattern ? 'Pattern' : 'RGB', components: state.strokePattern ? [] : [...state.strokeColor] }, state.strokeAlpha, style))
         }
         break
       }

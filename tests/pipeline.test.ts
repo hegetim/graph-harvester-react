@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test, vi } from 'vitest'
-import { createCanvas } from '@napi-rs/canvas'
+import { createCanvas, loadImage } from '@napi-rs/canvas'
 import { fileURLToPath } from 'node:url'
 import { execute_file as executePDFJS } from '../lib/harvester/pipeline'
 import { executeReference } from './mupdf-reference'
 import { harvestFile } from '../lib/harvester/browser'
-import { pdfFixture } from './pdf-fixture'
+import { patternFixture, pdfFixture } from './pdf-fixture'
 
 function execute_file(file: ArrayBuffer | Uint8Array<ArrayBufferLike>, options: { hog: boolean; hogEnquiryUrl?: string; logs?: string[] }) {
   return executePDFJS(file, {
@@ -69,6 +69,25 @@ test('harvestFile uses the PDF.js pipeline and forwards the HoG endpoint', async
   expect(fetch).toHaveBeenCalledWith('/custom/enquiry', expect.objectContaining({ method: 'POST' }))
   expect(Buffer.from(results[0]!.img, 'base64').subarray(0, 8))
     .toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+})
+
+test('pattern colors produce a warning and a rendered preview instead of failing', async () => {
+  const logs: string[] = []
+  const results = await execute_file(patternFixture(), { hog: false, logs })
+  expect(results.length).toBeGreaterThan(0)
+  expect(logs.filter(line => line.includes('Pattern colors'))).toEqual([
+    'PDF extraction, page 1: Pattern colors are treated as unknown for graph detection',
+  ])
+  let darkPixels = 0
+  for (const result of results) {
+    const img = await loadImage(Buffer.from(result.img, 'base64'))
+    const canvas = createCanvas(img.width, img.height)
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0)
+    const pixels = ctx.getImageData(0, 0, img.width, img.height).data
+    for (let i = 0; i < pixels.length; i += 4) if (pixels[i]! < 50) darkPixels++
+  }
+  expect(darkPixels).toBeGreaterThan(100)
 })
 
 test('unsupported clipping produces a page-specific diagnostic', async () => {
