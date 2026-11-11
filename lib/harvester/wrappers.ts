@@ -520,7 +520,6 @@ export class Stroke {
   extend_from_start(distance: number): Point {
     let dx;
     let dy;
-    let len;
     if (this.type === "line") {
       dx = this.start.x - this.end.x
       dy = this.start.y - this.end.y
@@ -535,7 +534,7 @@ export class Stroke {
       dx = this.start.x - end.x;
       dy = this.start.y - end.y;
     }
-    len = Math.hypot(dx, dy)
+    const len = Math.hypot(dx, dy)
     if (len === 0) // Edge is a single point
       return this.start
     distance = Math.min(distance, len / Stroke.EXTENSION_MAXIMUM)

@@ -132,10 +132,8 @@ export function transform_point(ctm: Matrix, x: number, y: number): Point {
 
 /** Assuming the first_stroke ends in the second_stroke's start point, it will calculate the inside angle at that point in degree. If that angle is less than 45° and both strokes are about equial in length, it will be considered an arrow tip */
 function detect_arrow_head(first_stroke: Stroke, second_stroke: Stroke, logs?: string[]): boolean {
-  let u: Point
-  let v: Point
-  u = { x: first_stroke.start.x - first_stroke.end.x, y: first_stroke.start.y - first_stroke.end.y }
-  v = { x: second_stroke.end.x - second_stroke.start.x, y: second_stroke.end.y - second_stroke.start.y }
+  const u = { x: first_stroke.start.x - first_stroke.end.x, y: first_stroke.start.y - first_stroke.end.y }
+  const v = { x: second_stroke.end.x - second_stroke.start.x, y: second_stroke.end.y - second_stroke.start.y }
   const dot = u.x * v.x + u.y * v.y
   const lenU = Math.hypot(first_stroke.start.x - first_stroke.end.x, first_stroke.start.y - first_stroke.end.y)
   const lenV = Math.hypot(second_stroke.end.x - second_stroke.start.x, second_stroke.end.y - second_stroke.start.y)
@@ -285,19 +283,22 @@ export function is_brighter_than(vertex: Path_Metadata, threshold: number): bool
     case "RGB":
     case "BGR":
       return color[0] >= threshold && color[1]! >= threshold && color[2]! >= threshold
-    case "CMYK":
+    case "CMYK": {
       const cmyk_threshold = 1 - threshold
       return color[0] <= cmyk_threshold && color[1]! <= cmyk_threshold && color[2]! <= cmyk_threshold && color[3]! <= cmyk_threshold
-    case "Lab":
+    }
+    case "Lab": {
       const lab_threshold = threshold * 100
       return color[0] >= lab_threshold
+    }
     case "Indexed":
       return false
-    case "Separation":
+    case "Separation": {
       const sep_threshold = 1 - threshold
       if (color.length === 1)
         return color[0] <= sep_threshold
       else return false
+    }
     default:
       return false
   }
@@ -538,9 +539,10 @@ export function split_edges_with_middle_vertex(graph: Map<Path_Metadata, Stroke[
             split_points.push({ vertex, t })
           }
           break
-        default:
+        default: {
           const t = shortest_index / (edge_points.length - 1)
           split_points.push({ vertex, t })
+        }
       }
     }
     if (split_points.length == 0) { // keep edge, if there are no middle points
@@ -689,18 +691,10 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
   for (const { x, y } of points)
     tree.add(x, y)
   tree.finish()
-  for (var i = 0; i < 2 * n; i++) { // for each endpoint of an edge do...
-    var edge: Stroke
-    var point: { x: number, y: number }
+  for (let i = 0; i < 2 * n; i++) { // for each endpoint of an edge do...
     const start = (i < n) // indicates if i is index of start point
-    if (start) {
-      edge = edges[i]!
-      point = edge.start
-    }
-    else {
-      edge = edges[i - n]!
-      point = edge.end
-    }
+    const edge = start ? edges[i]! : edges[i-n]!;
+    const point = start ? edge.start : edge.end;
     if ((start && edge.start_incident) || (!start && edge.end_incident))
       continue
     else
@@ -709,7 +703,7 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
     if (edge.length_squared() >= MINIMUM_EDGE_LENGTH * MINIMUM_EDGE_LENGTH)
       search_radius = Math.max(edge.stroke.lineWidth, MINIMUM_SEARCH_RADIUS)
 
-    var indices = tree.within(point.x, point.y, search_radius)
+    let indices = tree.within(point.x, point.y, search_radius)
     logs?.push("Found " + indices.length + " initial hits \n")
 
     //@warning this would be the function call to modify if one was to implement the suggestion.
@@ -740,34 +734,36 @@ export function edges_incident_to_edges(edges: Stroke[], graph: Map<Path_Metadat
     switch (indices.length) {
       case 0: // edge stays an orphan
         break
-      case 1: // edge is continued
-        if (false && implied_vertices) { // Produces too many false positives
-          logs?.push("Found implied vertex: x =" + point.x + "y =" + point.y + "\n")
-          const vertex = Path_Metadata.default(point, edge.stroke.lineWidth)
-          const edgelist: Stroke[] = [edge]
-          for (const index of indices) {
-            const other_edge = index < n ? (edges[index]!) : (edges[index - n]!)
-            if (index < n)
-              other_edge.start_incident = vertex
-            else
-              other_edge.end_incident = vertex
-            edgelist.push(other_edge)
-          }
-          graph.set(vertex, edgelist)
-          if (start)
-            edge.start_incident = vertex
-          else
-            edge.end_incident = vertex
-          break
-        }
-        else {
+      case 1: { // edge is continued
+        // Produces too many false positives
+        // if (false && implied_vertices) {
+        //   logs?.push("Found implied vertex: x =" + point.x + "y =" + point.y + "\n")
+        //   const vertex = Path_Metadata.default(point, edge.stroke.lineWidth)
+        //   const edgelist: Stroke[] = [edge]
+        //   for (const index of indices) {
+        //     const other_edge = index < n ? (edges[index]!) : (edges[index - n]!)
+        //     if (index < n)
+        //       other_edge.start_incident = vertex
+        //     else
+        //       other_edge.end_incident = vertex
+        //     edgelist.push(other_edge)
+        //   }
+        //   graph.set(vertex, edgelist)
+        //   if (start)
+        //     edge.start_incident = vertex
+        //   else
+        //     edge.end_incident = vertex
+        //   break
+        // }
+        // else {
           const index = indices[0]!
           const other_start = (index < n)
           const other_edge = other_start ? (edges[index]!) : (edges[index - n]!)
           // suggestion: maybe infer a vertex if StrokeStyle differs too much
           link_edges(edge, start, other_edge, other_start)
           break
-        }
+        // }
+      }
       default: // more than 1 indicates an implied vertex
         if (implied_vertices) {
           logs?.push("Found implied vertex: x =" + point.x + "y =" + point.y + "\n")

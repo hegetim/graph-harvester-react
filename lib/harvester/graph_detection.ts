@@ -229,7 +229,7 @@ export function detect_graphs_from_drawing(drawing: Drawing, logs?: string[]): G
   logs?.push("Called Detect Graphs from Drawing...")
   // Finding Candidates
   let vertex_candidates: Path_Metadata[] = []
-  let edge_candidates: Stroke[] = []
+  const edge_candidates: Stroke[] = []
   //logs?.push("Initializing Graph Detection for new Drawing...\n")
   for (const path of drawing.paths) {
     const res = utils.break_path_into_strokes(path, LUMINANCE_THRESHOLD)
@@ -248,13 +248,11 @@ export function detect_graphs_from_drawing(drawing: Drawing, logs?: string[]): G
   if (edge_candidates.length == 0)
     return []
   vertex_candidates = utils.merge_overlapping_vertices(vertex_candidates)
-  let graph = utils.vertices_within_distance_of_edge(VERTEX_EDGE_DISTANCE_THRESHOLD, edge_candidates, vertex_candidates)
+  const graph = utils.vertices_within_distance_of_edge(VERTEX_EDGE_DISTANCE_THRESHOLD, edge_candidates, vertex_candidates)
   utils.edges_incident_to_edges(edge_candidates, graph, implied_vertices)
   utils.extend_orphaned_edges(graph, VERTEX_EDGE_DISTANCE_THRESHOLD, EDGE_EXTENSION_THRESHOLD, EDGE_EXTENSION_STEP_SIZE, edge_candidates, vertex_candidates)
-  const { new_graph, new_edges } = utils.split_edges_with_middle_vertex(graph, edge_candidates)
-  graph = new_graph
-  edge_candidates = new_edges
-  const graphs = build_graphs_from_map(graph)
+  const { new_graph } = utils.split_edges_with_middle_vertex(graph, edge_candidates)
+  const graphs = build_graphs_from_map(new_graph)
   if (logs)
     for (const graph of graphs) {
       logs.push(graph.toString())

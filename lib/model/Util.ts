@@ -10,8 +10,11 @@ export const cls = (...names: ClassNames) => {
   return { className: joined };
 }
 
-export const zip = <T extends unknown[][]>(...arrays: T):
-  ({ [K in keyof T]: (T[K] extends (infer U)[] ? U : never) | undefined })[] => {
+type ZippedRow<T extends unknown[][]> = {
+  [K in keyof T]: T[K][number] | undefined
+}
+
+export const zip = <T extends unknown[][]>(...arrays: T): ZippedRow<T>[] => {
   const maxLength = Math.max(0, ...arrays.map(a => a.length));
-  return Array.from({ length: maxLength }, (_, i) => arrays.map(a => a[i]) as any);
+  return Array.from({ length: maxLength }, (_, i) => arrays.map(a => a[i]) as ZippedRow<T>);
 };
