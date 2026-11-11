@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import { defineConfig } from 'vitest/config'
 
 // Deliberately separate from Vite's library build (no CSS/declaration plugins).

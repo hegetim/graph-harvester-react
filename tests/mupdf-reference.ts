@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 // Temporary regression oracle for the migration; never bundled or published.
 import * as mupdf from 'mupdf'
 import { detect_graphs_from_drawing } from '../lib/harvester/graph_detection'

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import { expect } from 'vitest'
 import { OPS } from 'pdfjs-dist/legacy/build/pdf.mjs'
 

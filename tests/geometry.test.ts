@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import { describe, expect, test } from 'vitest'
 import { transform_point, mean, median, points_equal } from '../lib/harvester/geometry_utils'
 import { Path_Metadata } from '../lib/harvester/wrappers'

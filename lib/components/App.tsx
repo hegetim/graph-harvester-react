@@ -62,7 +62,7 @@ export const GraphHarvesterApplet = ({
   </div>;
 }
 
-const manual = "If you upload a pdf file containing vector-based graph drawings, the system will extract corresponding"
-  + " graphs and provide their downloadable adjacency matrices.";
+const manual = "Upload a PDF containing vector-based graph drawings. Graph Harvester extracts the graphs"
+  + " and provides their graph6 encodings, which you can copy for further analysis.";
 
 export default GraphHarvesterApplet

@@ -15,7 +15,7 @@ Play with our [demo instance](https://www1.pub.informatik.uni-wuerzburg.de/pub/h
 How To Use
 ----------
 
-Use the Graph Harvester applet like any other react component.
+The package is ESM-only. Use the Graph Harvester applet like any other React component.
 
 ```jsx
 <GraphHarvesterApplet />
@@ -25,7 +25,11 @@ The applet can be customized via optional properties.
 
  * `baseUrl`: the url of the backend component
  * `hogUrl`: the House of Graphs url
- * `showUrlInput`: enables users to query URLs as an alternative to uploading pdf files
+ * `showUrlInput`: enables users to fetch PDFs from URLs instead of uploading files.
+   It defaults to `false`: browser requests depend on the remote server permitting
+   CORS, and a backend proxy that fetches arbitrary URLs introduces security risks
+   such as server-side request forgery (SSRF). Enable it only if those trade-offs
+   are acceptable; this package does not provide a URL-fetching proxy.
  * `useHogProxy`: defaults to `true`; local extraction uses `/hog-api/enquiry`.
    Set to `false` to contact `https://houseofgraphs.org/api/enquiry` directly,
    e.g. when hosted on that same origin. This does not affect remote backends.

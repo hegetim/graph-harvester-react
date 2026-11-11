@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 Tim Hegemann
+     SPDX-License-Identifier: CC-BY-4.0 -->
+
 # Regression tests
 
 Run from the package root (`lib/` in the workspace):

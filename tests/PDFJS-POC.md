@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 Tim Hegemann
+     SPDX-License-Identifier: CC-BY-4.0 -->
+
 # PDF.js feasibility probe (migration step 1)
 
 ## Result: proceed with an adapter, not a direct substitution

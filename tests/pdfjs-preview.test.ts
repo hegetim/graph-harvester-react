@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { createCanvas, loadImage } from '@napi-rs/canvas'

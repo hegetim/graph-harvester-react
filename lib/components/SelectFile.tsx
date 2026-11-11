@@ -91,7 +91,7 @@ const checkUrl = async (url: string): Promise<{ type: 'pass', file: File } | { t
     const file = new File([blob], 'downloaded.pdf');
     if (file.size > fileSizeLimit) { return { type: 'error', msg: "file size limit exceeded" }; }
     return { type: 'pass', file };
-  } catch (err) {
+  } catch (_err) {
     return { type: 'error' as const, msg: `could not fetch url` };
   }
 }

@@ -1,16 +1,19 @@
 {
-  "name": "graph-harvester-react",
-  "private": true,
+  "name": "@hegetim/graph-harvester-react",
   "version": "0.2.0",
   "type": "module",
-  "main": "./dist/graph-harvester-react.umd.cjs",
+  "main": "./dist/graph-harvester-react.js",
   "module": "./dist/graph-harvester-react.js",
   "types": "./dist/graph-harvester-react.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/graph-harvester-react.js",
-      "require": "./dist/graph-harvester-react.umd.cjs"
-    }
+      "types": "./dist/graph-harvester-react.d.ts",
+      "import": "./dist/graph-harvester-react.js"
+    },
+    "./style.css": "./dist/graph-harvester-react.css"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "files": [
     "dist"

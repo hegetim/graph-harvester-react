@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import * as mupdf from 'mupdf'
 import { expect, test } from 'vitest'
 import { stroke_similarity } from '../lib/harvester/geometry_utils'

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 // Tiny engine-independent PDF writer: one content stream per page, no fonts.
 // ASCII-only content keeps byte offsets identical to JavaScript string offsets.
 export function pdfFixture(streams: string[]): Uint8Array {

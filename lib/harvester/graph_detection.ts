@@ -114,7 +114,7 @@ function filter_vertices_by_area(vertex_candidates: Path_Metadata[], edge_candid
         continue
       }
       else if (cluster.length >= MIN_CLUSTER_SIZE) { // Compute avg size for size check
-        var other_avg_size = 0
+        let other_avg_size = 0
         const others = vertex_candidates.filter(v => !cluster.some(x => x === v))
         logs?.push("Others: " + others.length + " vertices")
         others.forEach(x => {

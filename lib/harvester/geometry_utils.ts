@@ -27,7 +27,7 @@ export function merge_bounding_boxes(drawings: Drawing[]): Drawing[] {
   const result: Drawing[] = []
   const already_used: Map<Drawing, number> = new Map
   tree.load(drawings)
-  for (var drawing of drawings) {
+  for (const drawing of drawings) {
     //For each drawing, check for intersections, only taking drawings not yet used
     const neighbors = tree.search(drawing).filter((x) => !already_used.has(x) && x !== drawing)
     //Get index of cluster drawing belongs to
@@ -513,7 +513,7 @@ export function split_edges_with_middle_vertex(graph: Map<Path_Metadata, Stroke[
       let shortest_index = 0
       if (start_vertex === vertex || end_vertex === vertex)
         continue
-      for (var i = 0; i < edge_points.length; i++) { // determine closest endpoint for vertex
+      for (let i = 0; i < edge_points.length; i++) { // determine closest endpoint for vertex
         const { x: px, y: py } = edge_points[i]!
         const distance = ((px - x) * (px - x)) + ((py - y) * (py - y)) // euclidean distance without sqrt
         if (distance < shortest_distance) {
@@ -557,7 +557,7 @@ export function split_edges_with_middle_vertex(graph: Map<Path_Metadata, Stroke[
       const vertex = breakpt.vertex ? breakpt.vertex.toString() : "undefined"
       logs?.push("t: " + breakpt.t + " Endpt: " + vertex + "\n")
     }
-    for (var i = 0; i < breakpoints.length - 1; i++) { // Actual splitting
+    for (let i = 0; i < breakpoints.length - 1; i++) { // Actual splitting
       const left = breakpoints[i]!
       const right = breakpoints[i + 1]!
 

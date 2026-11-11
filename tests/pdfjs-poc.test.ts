@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import { readFile } from 'node:fs/promises'
 import * as mupdf from 'mupdf'
 import { getDocument, OPS, Util, version } from 'pdfjs-dist/legacy/build/pdf.mjs'

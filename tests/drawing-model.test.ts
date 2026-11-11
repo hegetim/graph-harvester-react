@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import * as mupdf from 'mupdf'
 import { expect, test } from 'vitest'
 import { get_paths_from_page, renderDrawing } from '../lib/harvester/mupdf-adapter'

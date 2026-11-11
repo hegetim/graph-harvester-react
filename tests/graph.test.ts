@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tim Hegemann
+// SPDX-License-Identifier: MIT
+
 import { expect, test, vi } from 'vitest'
 import { Graph, Vertex } from '../lib/harvester/wrappers'
 
