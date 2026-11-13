@@ -123,6 +123,23 @@ test('processes all pages in document order', async () => {
     .toEqual([...pageOne, ...pageTwo])
 })
 
+test.each([
+  { name: 'fraction bar', commands: '20 w 20 100 m 180 100 l S' },
+  { name: 'open curve', commands: '5 w 20 20 m 20 120 180 120 180 20 c S' },
+  { name: 'closed curve', commands: '50 20 m 90 20 120 50 120 90 c 120 130 90 160 50 160 c 10 160 10 20 50 20 c h S' },
+  { name: 'filled and stroked closed curve', commands: '50 20 m 90 20 120 50 120 90 c 120 130 90 160 50 160 c 10 160 10 20 50 20 c h B' },
+])('filters a drawing consisting only of a $name', async ({ commands }) => {
+  expect(await execute_file(pdfFixture([commands]), { hog: false })).toEqual([])
+})
+
+test('keeps a complex non-graph drawing for review', async () => {
+  const results = await execute_file(pdfFixture(['2 w 20 20 m 80 80 l 160 20 l S']), { hog: false })
+  expect(results).toHaveLength(1)
+  expect(results[0]!.graph6_strings).toEqual([])
+  expect(Buffer.from(results[0]!.img, 'base64').subarray(0, 8))
+    .toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+})
+
 test('a blank page produces no drawings', async () => {
   expect(await execute_file(pdfFixture(['']), { hog: false })).toEqual([])
 })

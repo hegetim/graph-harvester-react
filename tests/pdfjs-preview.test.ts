@@ -98,6 +98,9 @@ test('includes visible annotation appearances', async () => {
     stream('0 1 0 rg 0 0 40 40 re f', '/Type /XObject /Subtype /Form /BBox [0 0 40 40] /Resources << >>'),
   ])
   await withPage(data, async page => {
+    // Annotations are excluded from extraction but remain in the preview,
+    // even when the annotation-free operator list was requested first.
+    expect((await extractPDFJSPage(page)).paths).toEqual([])
     const preview = await decode(await renderPDFJSPreview(page, [0, 0, 100, 100], { scale: 1, createCanvas: createTestCanvas }))
     expect(pixel(preview.ctx, 40, 60)).toEqual([0, 255, 0, 255])
   })

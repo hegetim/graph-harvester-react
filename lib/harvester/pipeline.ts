@@ -6,6 +6,7 @@ import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mj
 import type { DocumentInitParameters } from 'pdfjs-dist/types/src/display/api'
 import { detect_graphs_from_drawing } from './graph_detection.js'
 import { group_paths_by_bb } from './pdf_extraction.js'
+import { isTrivialDrawing } from './drawing-filter.js'
 import { Graph, type DetectedGraph } from './wrappers.js'
 import { extractPDFJSPage } from './pdfjs-adapter.js'
 import { renderPDFJSPreview, type PreviewOptions } from './pdfjs-preview.js'
@@ -44,7 +45,9 @@ export async function execute_file(
           if (params.logs) params.logs.push(message)
           else console.warn(message)
         }
-        const drawings = group_paths_by_bb(paths).sort((a, b) => a.minX - b.minX)
+        const drawings = group_paths_by_bb(paths)
+          .filter(drawing => !isTrivialDrawing(drawing))
+          .sort((a, b) => a.minX - b.minX)
         for (let drawingIndex = 0; drawingIndex < drawings.length; drawingIndex++) {
           const drawing = drawings[drawingIndex]!
           const graphs = detect_graphs_from_drawing(drawing, params.logs)

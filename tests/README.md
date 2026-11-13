@@ -28,6 +28,8 @@ blocks unexpected fetches; lookup tests supply explicit responses.
   PNG signatures, typed-array and
   ArrayBuffer inputs, malformed PDFs, blank pages, page ordering, and preservation
   of extraction results when HoG lookup fails.
+- `drawing-filter.test.ts`: conservative rejection of isolated lines, curves,
+  and closed curved contours, including duplicate fill/stroke geometry.
 - `geometry.test.ts`: coordinate transforms (including rotation and PDF Y-axis
   inversion), vertex bounds, statistics, and point comparisons.
 - `graph.test.ts`: adjacency matrices, graph6 encoding, edge deduplication,

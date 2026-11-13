@@ -42,6 +42,11 @@ export default defineConfig({
       // into your library
       external: [/^react(?:\/.*)?$/, /^react-dom(?:\/.*)?$/],
       output: {
+        // Some web servers do not assign a JavaScript MIME type to .mjs.
+        // This remains the original PDF.js ES module, just with a .js suffix.
+        assetFileNames: asset => asset.names.some(name => name.endsWith('pdf.worker.mjs'))
+          ? 'pdf.worker.js'
+          : '[name][extname]',
         // Provide global variables to use in the UMD build
         // for externalized deps
         globals: {

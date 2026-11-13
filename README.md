@@ -79,6 +79,12 @@ browser console. Pattern colors are treated as unknown for graph detection,
 so results may differ; page previews still render the original patterns. Stroke
 bounds are approximate. Test representative documents before relying on local extraction.
 
+For local extraction, drawings consisting solely of a single line, open curve,
+or closed curved contour are omitted as unlikely graph drawings. More complex
+figures remain in the results even when no graph is detected, so they can be reviewed.
+PDF annotation appearances are excluded from graph detection but remain visible
+in page previews.
+
 The demo defaults to proxying; open `/?hogProxy=false` to test direct requests.
 Vite supplies the development/preview proxy only. Production webservers must
 configure `/hog-api/*` to forward to `https://houseofgraphs.org/api/*` if proxying

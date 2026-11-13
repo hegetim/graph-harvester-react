@@ -3,7 +3,7 @@
 
 import { readFile } from 'node:fs/promises'
 import * as mupdf from 'mupdf'
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { expect, test } from 'vitest'
 import { extractPDFJSPage } from '../lib/harvester/pdfjs-adapter'
 import { get_paths_from_page } from '../lib/harvester/mupdf-adapter'
@@ -60,6 +60,27 @@ test('pattern fills and strokes are retained with unknown color and graphics sta
     expect(paths[2]!.color).toEqual([1, 1, 1])
     expect(paths[3]!.color).toEqual([1, 1, 1])
     expect(paths[5]!.color).toEqual([0, 0, 0])
+  })
+})
+
+test('ignores annotation appearances while extracting page content', async () => {
+  const stream = (content: string, dictionary = '') =>
+    `<< ${dictionary} /Length ${content.length} >>\nstream\n${content}\nendstream`
+  const data = pdfObjects([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Count 1 /Kids [3 0 R] >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << >> /Contents 4 0 R /Annots [5 0 R] >>',
+    stream('0 g 20 20 80 80 re f'),
+    '<< /Type /Annot /Subtype /Link /Rect [120 120 180 180] /F 4 /AP << /N 6 0 R >> >>',
+    stream('1 0 0 rg 0 0 60 60 re f', '/Type /XObject /Subtype /Form /BBox [0 0 60 60] /Resources << >>'),
+  ])
+  await inspect(data, async page => {
+    // Verify that the default list actually contains an annotation appearance.
+    expect((await page.getOperatorList()).fnArray).toContain(OPS.beginAnnotation)
+    const { paths } = await extractPDFJSPage(page)
+    expect(paths).toHaveLength(1)
+    expect(paths[0]!.getBounds()).toEqual([20, 100, 100, 180])
+    expect(paths[0]!.color).toEqual([0, 0, 0])
   })
 })
 

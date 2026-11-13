@@ -4,7 +4,7 @@
 
 // This adapter targets the pinned PDF.js 6.5.438 operator representation.
 // See tests/PDFJS-POC.md for compatibility and known limitations.
-import { OPS, version } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { AnnotationMode, OPS, version } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api'
 import type { Matrix, PathCommand, Rect, StrokeStyle } from './drawing-model.js'
 import { Path_Metadata } from './wrappers.js'
@@ -136,7 +136,9 @@ function bounds(commands: PathCommand[], ctm: Matrix, stroke?: StrokeStyle): Rec
  * existing extractor. Callers must inspect warnings before relying on results. */
 export async function extractPDFJSPage(page: PDFPageProxy): Promise<PDFJSExtraction> {
   if (version !== '6.5.438') throw new Error(`Unsupported PDF.js version ${version}; adapter requires 6.5.438`)
-  const operators = await page.getOperatorList()
+  // Annotation appearances have their own transforms and aren't page drawing
+  // geometry. Previews render the page separately and retain annotations.
+  const operators = await page.getOperatorList({ annotationMode: AnnotationMode.DISABLE })
   let state: GraphicsState = {
     ctm: matrix(page.getViewport({ scale: 1 }).transform),
     stroke: { lineWidth: 1, lineCap: 0, lineJoin: 0, miterLimit: 10, dashPhase: 0, dashes: [] },
