@@ -29,8 +29,15 @@ entry point for CSS-aware bundlers. A separate stylesheet is also available as
 How To Use
 ----------
 
-By default the applet uploads PDFs to its configured remote Graph Harvester
-backend. To use browser-local PDF extraction instead:
+The applet offers two ways to process an uploaded PDF:
+
+- **Browser-local:** PDF processing happens in the user's browser. The applet
+  also attempts to look up each detected graph in House of Graphs, as explained
+  below.
+- **Remote backend:** the PDF is uploaded to a Graph Harvester server for
+  processing. This is the default if no `backend` is specified.
+
+### Browser-local extraction
 
 ```jsx
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -41,37 +48,71 @@ export function GraphHarvester() {
 }
 ```
 
-The local mode defaults to a same-origin House of Graphs proxy; see its
-production setup below. You can explicitly configure another backend with
-`backend={{ type: 'remote', url: 'https://example.org' }}`. The component posts
-PDFs to the remote backend's `/upload` endpoint.
+The PDF stays in the browser for extraction. Graph encodings are sent to House
+of Graphs for lookup; the PDF itself is not sent to that service. The lookups
+require the proxy configuration described in the next section. If a lookup
+fails, the extracted graph is still shown, with an error beside its HoG link and
+in the browser console.
 
-The applet can be customized via optional properties.
+### House of Graphs lookups in local mode
 
- * `backend`: select a local callback or the URL of a remote backend
- * `hogUrl`: base URL used for links to House of Graphs
- * `showUrlInput`: enables users to fetch PDFs from URLs instead of uploading files.
-   It defaults to `false`: browser requests depend on the remote server permitting
-   CORS, and a backend proxy that fetches arbitrary URLs introduces security risks
-   such as server-side request forgery (SSRF). Enable it only if those trade-offs
-   are acceptable; this package does not provide a URL-fetching proxy.
- * `useHogProxy`: defaults to `true`; local extraction uses `/hog-api/enquiry`.
-   Set to `false` to contact `https://houseofgraphs.org/api/enquiry` directly,
-   e.g. when hosted on that same origin. This does not affect remote backends.
+[House of Graphs](https://houseofgraphs.org/) is an online database of graphs.
+After extracting a graph, the applet asks its API whether the graph has a database
+entry and, if so, displays a link. Browser security restrictions (CORS) can
+prevent a website from sending that request directly to House of Graphs.
 
-Custom local callbacks must forward their second argument to `harvestFile` to
-preserve the component's lookup settings. House of Graphs lookups send detected
-graph encodings to that service. Remote mode sends the uploaded PDF to the
-configured backend. Failed lookups preserve the extracted graph and report an
-error beside its HoG link and in the browser console rather than claiming the
-graph is absent. Browsers cannot reliably distinguish CORS failures from other
-network failures, so the error mentions both possibilities.
+By default, the applet sends lookup requests to **`/hog-api/enquiry` on your own
+website**. Your web server must forward requests under `/hog-api/` to
+`https://houseofgraphs.org/api/` (for example, `/hog-api/enquiry` becomes
+`https://houseofgraphs.org/api/enquiry`). This is a reverse proxy for the House
+of Graphs API—not a service included in this package. Configure it in production
+or the lookup will fail, although local extraction can still succeed.
 
-Local extraction now uses PDF.js. The library build emits a worker from the same
+For Vite development, a proxy can be configured in the consuming application's
+`vite.config.ts`:
+
+```ts
+import { defineConfig } from 'vite'
+
+const proxy = {
+  '/hog-api': {
+    target: 'https://houseofgraphs.org',
+    changeOrigin: true,
+    rewrite: (path: string) => path.replace(/^\/hog-api/, '/api'),
+  },
+}
+
+export default defineConfig({
+  server: { proxy },  // development server
+  preview: { proxy }, // Vite preview server
+})
+```
+
+Merge this with your existing Vite configuration. It does **not** configure a
+production web server. If direct browser requests are permitted by House of
+Graphs in your deployment, you can instead set `useHogProxy={false}`. Direct
+cross-origin requests may fail because of CORS; the component cannot reliably
+distinguish that from other network failures.
+
+### Remote backend
+
+To use a particular Graph Harvester backend instead of local extraction:
+
+```jsx
+<GraphHarvesterApplet backend={{ type: 'remote', url: 'https://example.org' }} />
+```
+
+The applet sends the uploaded PDF to that backend's `/upload` endpoint. In remote
+mode, House of Graphs lookup behavior is controlled by the backend;
+`useHogProxy` does not change it.
+
+### PDF.js worker and resources
+
+Local extraction uses PDF.js. The library build emits a worker from the same
 pinned PDF.js version; deploy the worker asset alongside the generated library
 chunks, and allow it under your site's `worker-src` Content Security Policy.
-The demo's Vite build emits the worker under its configured base path. Other
-consumer bundlers and real-browser deployments still need verification.
+Verify that your application's bundler includes the worker and that it can be
+loaded from your deployment path.
 
 Some PDFs need PDF.js auxiliary resources (CMaps, standard fonts, WebAssembly,
 and ICC profiles). They are **not currently bundled automatically**. To enable
@@ -99,16 +140,23 @@ browser console. Pattern colors are treated as unknown for graph detection,
 so results may differ; page previews still render the original patterns. Stroke
 bounds are approximate. Test representative documents before relying on local extraction.
 
-For local extraction, drawings consisting solely of a single line, open curve,
-or closed curved contour are omitted as unlikely graph drawings. More complex
-figures remain in the results even when no graph is detected, so they can be reviewed.
-PDF annotation appearances are excluded from graph detection but remain visible
-in page previews.
+### Component options
 
-The demo defaults to proxying; open `/?hogProxy=false` to test direct requests.
-Vite supplies the development/preview proxy only. Production webservers must
-configure `/hog-api/*` to forward to `https://houseofgraphs.org/api/*` if proxying
-is enabled; the static build does not include a proxy server.
+- `backend`: a local callback or the URL of a remote backend. Without this prop,
+  the applet uses its default remote backend.
+- `hogUrl`: base URL used for links to House of Graphs; this does not change the
+  lookup endpoint.
+- `useHogProxy`: in local mode, use the same-origin proxy described above
+  (default `true`); set to `false` to try the House of Graphs API directly.
+- `showUrlInput`: allow fetching PDFs from URLs instead of uploading files.
+  It defaults to `false`: browser requests depend on the remote server permitting
+  CORS, and a backend proxy that fetches arbitrary URLs introduces security risks
+  such as server-side request forgery (SSRF). This package does not provide a
+  URL-fetching proxy.
+
+Custom local callbacks should forward their second argument to `harvestFile`,
+so that the applet's lookup settings are preserved, as shown in the PDF.js
+resource example above.
 
 
 Development and tests
