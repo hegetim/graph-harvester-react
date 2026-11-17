@@ -1,6 +1,7 @@
 {
   "name": "@hegetim/graph-harvester-react",
   "version": "0.2.0",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/graph-harvester-react.js",
   "module": "./dist/graph-harvester-react.js",
@@ -16,7 +17,9 @@
     "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSES",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
     "dev": "vite",
@@ -31,8 +34,6 @@
   },
   "peerDependencies": {
     "bootstrap": "^5.3.8",
-    "kdbush": "^4.1.0",
-    "rbush": "^4.0.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
@@ -52,12 +53,14 @@
     "mupdf": "1.28.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12",
+    "vite": "^8.3.8",
     "vite-plugin-dts": "^5.0.2",
     "vite-plugin-lib-inject-css": "^2.2.2",
     "vitest": "^5.1.0"
   },
   "dependencies": {
-    "pdfjs-dist": "6.5.438"
+    "kdbush": "^4.1.0",
+    "pdfjs-dist": "6.5.438",
+    "rbush": "^4.0.1"
   }
 }

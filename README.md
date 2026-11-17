@@ -12,19 +12,44 @@ used in publications nowadays.
 Play with our [demo instance](https://www1.pub.informatik.uni-wuerzburg.de/pub/hegemann/harvester/).
 
 
+Installation
+------------
+
+```sh
+npm install @hegetim/graph-harvester-react bootstrap
+```
+
+The package is ESM-only and requires React and React DOM matching its declared
+peer dependency ranges. Its component uses Bootstrap classes; load Bootstrap's
+CSS in your application. The package's own CSS is imported by its JavaScript
+entry point for CSS-aware bundlers. A separate stylesheet is also available as
+`@hegetim/graph-harvester-react/style.css` if needed by your setup.
+
+
 How To Use
 ----------
 
-The package is ESM-only. Use the Graph Harvester applet like any other React component.
+By default the applet uploads PDFs to its configured remote Graph Harvester
+backend. To use browser-local PDF extraction instead:
 
 ```jsx
-<GraphHarvesterApplet />
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { GraphHarvesterApplet, harvestFile } from '@hegetim/graph-harvester-react'
+
+export function GraphHarvester() {
+  return <GraphHarvesterApplet backend={{ type: 'local', callback: harvestFile }} />
+}
 ```
+
+The local mode defaults to a same-origin House of Graphs proxy; see its
+production setup below. You can explicitly configure another backend with
+`backend={{ type: 'remote', url: 'https://example.org' }}`. The component posts
+PDFs to the remote backend's `/upload` endpoint.
 
 The applet can be customized via optional properties.
 
- * `baseUrl`: the url of the backend component
- * `hogUrl`: the House of Graphs url
+ * `backend`: select a local callback or the URL of a remote backend
+ * `hogUrl`: base URL used for links to House of Graphs
  * `showUrlInput`: enables users to fetch PDFs from URLs instead of uploading files.
    It defaults to `false`: browser requests depend on the remote server permitting
    CORS, and a backend proxy that fetches arbitrary URLs introduces security risks
@@ -34,19 +59,13 @@ The applet can be customized via optional properties.
    Set to `false` to contact `https://houseofgraphs.org/api/enquiry` directly,
    e.g. when hosted on that same origin. This does not affect remote backends.
 
-For local extraction, pass `harvestFile` as the callback so it receives the
-component's lookup options (custom callbacks must forward the second argument):
-
-```jsx
-<GraphHarvesterApplet
-  backend={{ type: 'local', callback: harvestFile }}
-  useHogProxy={false}
-/>
-```
-
-Failed lookups preserve the extracted graph and report an error beside its
-HoG link and in the browser console rather than claiming the graph is absent. Browsers cannot reliably distinguish CORS failures
-from other network failures, so the error mentions both possibilities.
+Custom local callbacks must forward their second argument to `harvestFile` to
+preserve the component's lookup settings. House of Graphs lookups send detected
+graph encodings to that service. Remote mode sends the uploaded PDF to the
+configured backend. Failed lookups preserve the extracted graph and report an
+error beside its HoG link and in the browser console rather than claiming the
+graph is absent. Browsers cannot reliably distinguish CORS failures from other
+network failures, so the error mentions both possibilities.
 
 Local extraction now uses PDF.js. The library build emits a worker from the same
 pinned PDF.js version; deploy the worker asset alongside the generated library
@@ -58,7 +77,8 @@ Some PDFs need PDF.js auxiliary resources (CMaps, standard fonts, WebAssembly,
 and ICC profiles). They are **not currently bundled automatically**. To enable
 these, copy the `cmaps`, `standard_fonts`, `wasm`, and `iccs` directories from
 the installed `pdfjs-dist` package to a publicly served directory, preserving
-their names, and forward that directory URL to `harvestFile`:
+their names and accompanying license files, and forward that directory URL to
+`harvestFile`:
 
 ```jsx
 <GraphHarvesterApplet
@@ -106,6 +126,16 @@ npm run build
 The build type-checks the library, build configuration, and tests. Tests and PDF
 fixtures are not included in the production bundle or npm package. See
 [tests/README.md](tests/README.md) for coverage, snapshot updates, and fixture notes.
+
+
+Licensing
+---------
+
+Graph Harvester's own code is available under MIT; this README is CC-BY-4.0.
+The distribution includes code under additional permissive licenses, including
+PDF.js (Apache-2.0). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and
+`LICENSES/` for details. Auxiliary PDF.js assets have their own accompanying
+license files which must be reviewed when distributing them.
 
 
 Publication

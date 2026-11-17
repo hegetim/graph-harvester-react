@@ -40,7 +40,7 @@ export default defineConfig({
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library
-      external: [/^react(?:\/.*)?$/, /^react-dom(?:\/.*)?$/],
+      external: [/^react(?:\/.*)?$/, /^react-dom(?:\/.*)?$/, 'kdbush', 'rbush'],
       output: {
         // Some web servers do not assign a JavaScript MIME type to .mjs.
         // This remains the original PDF.js ES module, just with a .js suffix.

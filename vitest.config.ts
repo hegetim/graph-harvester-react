@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2026 Tim Hegemann
-// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: NONE
+// SPDX-License-Identifier: CC0-1.0
 
 import { defineConfig } from 'vitest/config'
 
